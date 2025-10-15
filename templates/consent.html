@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authorize Access</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card text-center">
+        <div class="card-header">
+            Authorize Application
+        </div>
+        <div class="card-body p-4">
+            <h5 class="card-title">
+                <strong>{{ grant.client.client_name }}</strong> wants to access your account.
+            </h5>
+            <p class="text-muted">Logged in as: {{ user.profile_data.name }} ({{ user.pesuprn }})</p>
+            <p>This application will be able to:</p>
+            <ul class="list-group mb-4">
+                {% for scope in grant.request.scope.split() %}
+                    <li class="list-group-item">Read your basic profile information (PRN, Name)</li>
+                {% endfor %}
+            </ul>
+            <form method="post">
+                <input type="hidden" name="confirm" value="true">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <button type="submit" class="btn btn-primary px-4">Allow</button>
+                    <a href="#" class="btn btn-outline-secondary px-4">Deny</a> <!-- Simple deny link for now -->
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
