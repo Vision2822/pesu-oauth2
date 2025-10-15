@@ -157,14 +157,36 @@ require_oauth.register_token_validator(MyTokenValidator())
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        admin_prns = [admin.strip() for admin in os.getenv("ADMIN_USERS", "").split(',') if admin]
-        user = get_current_user()
-        if not user:
+        print("--- ADMIN CHECK INITIATED ---")
+
+        admin_prns_raw = os.getenv("ADMIN_USERS", "")
+        admin_prns = [admin.strip() for admin in admin_prns_raw.split(',') if admin]
+        print(f"Admins from ENV: {admin_prns}")
+
+        user_id = session.get('user_id')
+        print(f"Session user_id: {user_id}")
+        if not user_id:
             flash("You must be logged in to access this page.", "warning")
             return redirect(url_for('login', next=request.url))
-        if user.pesuprn not in admin_prns:
+
+        user = get_current_user()
+        if not user:
+            print("ERROR: user_id in session but no user found in DB!")
+            flash("Session error. Please log in again.", "danger")
+            return redirect(url_for('login', next=request.url))
+
+        user_prn = user.pesuprn
+        print(f"Logged-in user's PRN: '{user_prn}'")
+
+        is_admin = user_prn in admin_prns
+        print(f"Is user an admin? ({user_prn} in {admin_prns}): {is_admin}")
+
+        if not is_admin:
             flash("You do not have permission to access the admin panel.", "danger")
+            print("--- ADMIN CHECK FAILED: Redirecting ---")
             return redirect(url_for('index'))
+
+        print("--- ADMIN CHECK PASSED ---")
         return f(*args, **kwargs)
     return decorated_function
 
