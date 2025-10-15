@@ -223,6 +223,7 @@ def delete_client(client_id):
 def authorize():
     user = get_current_user()
     if not user: return redirect(url_for('login', next=request.url))
+
     if request.method == 'GET':
         try:
             grant = server.get_consent_grant(end_user=user)
@@ -230,11 +231,15 @@ def authorize():
         except Exception as e:
             flash(f"Authorization Error: {e}", "danger")
             return render_template('error.html', error=e)
-    grant_user = user if request.form.get('confirm') else None
-    scope_string = ' '.join(request.form.getlist('scope'))
-    grant = server.get_consent_grant(end_user=grant_user)
-    grant.request.scope = scope_string
-    return server.create_authorization_response(grant_user=grant_user)
+
+    if request.form.get('confirm'):
+        grant_user = user
+        grant_scope = ' '.join(request.form.getlist('scope'))
+    else:
+        grant_user = None
+        grant_scope = None
+
+    return server.create_authorization_response(grant_user=grant_user, grant_scope=grant_scope)
 
 @app.route('/oauth2/token', methods=['POST'])
 def issue_token():
