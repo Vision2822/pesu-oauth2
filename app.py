@@ -1,5 +1,6 @@
 import os
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for, flash
+from flask import Response
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
@@ -94,3 +95,8 @@ def transparency():
         return jsonify({"deployment_source": {"github_commit_url": github_url}})
     else:
         return jsonify({"status": "dev"})
+
+@app.route('/api/badge')
+def vercel_badge():
+    badge_svg = """<svg xmlns="http://www.w.org/2000/svg" width="90" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="90" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h37v20H0z"/><path fill="#0070f3" d="M37 0h53v20H37z"/><path fill="url(#b)" d="M0 0h90v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,sans-serif" font-size="11"><text x="18.5" y="15" fill="#010101" fill-opacity=".3">vercel</text><text x="18.5" y="14">vercel</text><text x="62.5" y="15" fill="#010101" fill-opacity=".3">deployed</text><text x="62.5" y="14">deployed</text></g></svg>"""
+    return Response(badge_svg, mimetype='image/svg+xml', headers={'Cache-Control': 'no-cache'})
