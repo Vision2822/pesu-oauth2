@@ -214,7 +214,9 @@ def admin():
             "client_name": request.form.get('client_name'),
             "redirect_uris": request.form.get('redirect_uris').split(),
             "scope": ' '.join(request.form.get('scope').split()),
-            "token_endpoint_auth_method": 'client_secret_post'
+            "token_endpoint_auth_method": 'client_secret_post',
+            "grant_types": ["authorization_code", "refresh_token"],
+            "response_types": ["code"],
         }
         client.set_client_metadata(client_metadata)
 
