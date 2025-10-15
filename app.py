@@ -45,8 +45,6 @@ migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 
 
-# --- Database Models ---
-
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pesuprn = db.Column(db.String(80), unique=True, nullable=False, index=True)
@@ -75,8 +73,6 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
         expires_at = self.issued_at + self.expires_in * 2
         return expires_at >= time.time()
 
-
-# --- Authlib Server Configuration ---
 
 def get_current_user():
     if 'user_id' in session:
@@ -153,45 +149,20 @@ require_oauth = ResourceProtector()
 require_oauth.register_token_validator(MyTokenValidator())
 
 
-# --- Admin Authorization Decorator ---
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print("--- ADMIN CHECK INITIATED ---")
-
-        admin_prns_raw = os.getenv("ADMIN_USERS", "")
-        admin_prns = [admin.strip() for admin in admin_prns_raw.split(',') if admin]
-        print(f"Admins from ENV: {admin_prns}")
-
-        user_id = session.get('user_id')
-        print(f"Session user_id: {user_id}")
-        if not user_id:
-            flash("You must be logged in to access this page.", "warning")
-            return redirect(url_for('login', next=request.url))
-
+        admin_prns = [admin.strip() for admin in os.getenv("ADMIN_USERS", "").split(',') if admin]
         user = get_current_user()
         if not user:
-            print("ERROR: user_id in session but no user found in DB!")
-            flash("Session error. Please log in again.", "danger")
+            flash("You must be logged in to access this page.", "warning")
             return redirect(url_for('login', next=request.url))
-
-        user_prn = user.pesuprn
-        print(f"Logged-in user's PRN: '{user_prn}'")
-
-        is_admin = user_prn in admin_prns
-        print(f"Is user an admin? ({user_prn} in {admin_prns}): {is_admin}")
-
-        if not is_admin:
+        if user.pesuprn not in admin_prns:
             flash("You do not have permission to access the admin panel.", "danger")
-            print("--- ADMIN CHECK FAILED: Redirecting ---")
             return redirect(url_for('index'))
-
-        print("--- ADMIN CHECK PASSED ---")
         return f(*args, **kwargs)
     return decorated_function
 
-
-# --- User-Facing Web Routes ---
 
 @app.route('/')
 def index():
@@ -231,26 +202,34 @@ def logout():
 def admin():
     if request.method == 'POST':
         client_id = token_urlsafe(24)
-        client_secret = token_urlsafe(48)
+        client_secret_plain = token_urlsafe(48)
+        hashed_secret = bcrypt.generate_password_hash(client_secret_plain).decode('utf-8')
+
         client = OAuth2Client(
             client_id=client_id,
-            client_secret=bcrypt.generate_password_hash(client_secret).decode('utf-8'),
-            client_name=request.form.get('client_name'),
-            redirect_uris=' '.join(request.form.get('redirect_uris').split()),
-            scope=' '.join(request.form.get('scope').split()),
-            token_endpoint_auth_method='client_secret_post'
+            client_secret=hashed_secret
         )
+
+        client_metadata = {
+            "client_name": request.form.get('client_name'),
+            "redirect_uris": request.form.get('redirect_uris').split(),
+            "scope": ' '.join(request.form.get('scope').split()),
+            "token_endpoint_auth_method": 'client_secret_post'
+        }
+        client.set_client_metadata(client_metadata)
+
         db.session.add(client)
         db.session.commit()
-        flash(f"Client Created Successfully!", "success")
+
+        flash("Client Created Successfully!", "success")
         flash(f"Client ID: {client_id}", "info")
-        flash(f"Client Secret: {client_secret}  (Copy this now, it will not be shown again)", "warning")
+        flash(f"Client Secret: {client_secret_plain}  (Copy this now, it will not be shown again)", "warning")
+
         return redirect(url_for('admin'))
+
     clients = OAuth2Client.query.all()
     return render_template('admin.html', clients=clients)
 
-
-# --- OAuth2 & API Routes ---
 
 @app.route('/oauth2/authorize', methods=['GET', 'POST'])
 def authorize():
