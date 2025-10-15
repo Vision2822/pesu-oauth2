@@ -3,6 +3,7 @@ from flask import Flask, jsonify, render_template, request, session, redirect, u
 from flask import Response
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
+import io
 
 from pesu_auth_client import login_and_get_profile
 
@@ -98,5 +99,20 @@ def transparency():
 
 @app.route('/api/badge')
 def vercel_badge():
-    badge_svg = """<svg xmlns="http://www.w.org/2000/svg" width="90" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="90" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h37v20H0z"/><path fill="#0070f3" d="M37 0h53v20H37z"/><path fill="url(#b)" d="M0 0h90v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,sans-serif" font-size="11"><text x="18.5" y="15" fill="#010101" fill-opacity=".3">vercel</text><text x="18.5" y="14">vercel</text><text x="62.5" y="15" fill="#010101" fill-opacity=".3">deployed</text><text x="62.5" y="14">deployed</text></g></svg>"""
-    return Response(badge_svg, mimetype='image/svg+xml', headers={'Cache-Control': 'no-cache'})
+    """Generates a dynamic 'Deployed on Vercel' SVG badge with robust headers."""
+    # This is a standard, known-good SVG badge template
+    badge_svg_string = '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="20" role="img"><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="90" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#r)"><rect width="37" height="20" fill="#555"/><rect x="37" width="53" height="20" fill="#0070f3"/><rect width="90" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,sans-serif" text-rendering="geometricPrecision" font-size="110"><text aria-hidden="true" x="185" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="270">vercel</text><text x="185" y="140" transform="scale(.1)" fill="#fff" textLength="270">vercel</text><text aria-hidden="true" x="625" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="430">deployed</text><text x="625" y="140" transform="scale(.1)" fill="#fff" textLength="430">deployed</text></g></svg>'
+
+    # Encode the string to bytes to calculate the content length
+    svg_bytes = badge_svg_string.encode('utf-8')
+
+    # Create the response object
+    response = Response(svg_bytes, mimetype='image/svg+xml')
+
+    # Set explicit, robust headers that proxies respect
+    response.headers['Content-Length'] = len(svg_bytes)
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+
+    return response
