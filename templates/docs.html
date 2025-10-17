@@ -4,18 +4,44 @@
 <div class="container docs-content">
     <div class="text-center">
         <h1 class="display-4 fw-bold mb-4">Developer Documentation</h1>
+        <p class="lead">Integrate secure PESU authentication into your application in minutes.</p>
     </div>
 
     <section id="flow" class="my-5">
         <h2>Authorization Flow</h2>
         <p class="text-muted">This service implements the OAuth 2.0 Authorization Code Grant with PKCE. The flow is as follows:</p>
         <ol>
-            <li>Your application redirects the user to the <code>/oauth2/authorize</code> endpoint with your client details.</li>
-            <li>The user authenticates and grants consent.</li>
-            <li>The user is redirected back to your specified <code>redirect_uri</code> with a temporary <code>code</code>.</li>
-            <li>Your application's backend exchanges this <code>code</code> for an <code>access_token</code> at the <code>/oauth2/token</code> endpoint.</li>
+            <li>Your application generates a PKCE `code_verifier` and `code_challenge`.</li>
+            <li>You redirect the user to the <code>/oauth2/authorize</code> endpoint with your client details and the `code_challenge`.</li>
+            <li>The user authenticates with PESU and grants consent to your application.</li>
+            <li>The user is redirected back to your specified <code>redirect_uri</code> with a temporary authorization <code>code</code>.</li>
+            <li>Your application's backend server exchanges this <code>code</code> (along with the original `code_verifier`) for an <code>access_token</code> at the <code>/oauth2/token</code> endpoint.</li>
             <li>Your application uses the <code>access_token</code> to access protected resources like <code>/api/v1/user</code>.</li>
         </ol>
+    </section>
+
+    <section id="pkce" class="my-5">
+        <h2>Generating PKCE Codes</h2>
+        <p class="text-muted">PKCE is required. You must generate a `code_verifier` and a `code_challenge` on the client-side before redirecting the user. Here is an example in Python:</p>
+        <pre><code>{% raw %}
+import hashlib
+import base64
+import os
+
+def generate_pkce_codes():
+    # 1. Generate a high-entropy random string
+    code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
+    code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
+
+    # 2. Create the code_challenge by SHA256 hashing the verifier
+    code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').replace('=', '')
+
+    return code_verifier, code_challenge
+
+# You will then use the code_challenge in your authorization URL,
+# and save the code_verifier in the user's session to use later.
+        {% endraw %}</code></pre>
     </section>
 
     <section id="endpoints" class="my-5">
@@ -23,7 +49,7 @@
 
         <h3 class="mt-4">Authorization Endpoint</h3>
         <p><code>GET /oauth2/authorize</code></p>
-        <p class="text-muted">User-facing endpoint to initiate the login and consent flow.</p>
+        <p class="text-muted">The user-facing endpoint to initiate the login and consent flow.</p>
         <h6>Parameters</h6>
         <table class="table table-bordered">
             <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
@@ -33,32 +59,78 @@
                 <tr><td><code>response_type</code></td><td>Yes</td><td>Must be set to <code>code</code>.</td></tr>
                 <tr><td><code>scope</code></td><td>Yes</td><td>A space-separated list of requested permissions.</td></tr>
                 <tr><td><code>state</code></td><td>Recommended</td><td>An opaque value used for CSRF protection.</td></tr>
-                <tr><td><code>code_challenge</code></td><td>Yes</td><td>A PKCE code challenge.</td></tr>
+                <tr><td><code>code_challenge</code></td><td>Yes</td><td>The PKCE code challenge (S256).</td></tr>
                 <tr><td><code>code_challenge_method</code></td><td>Yes</td><td>Must be set to <code>S256</code>.</td></tr>
             </tbody>
         </table>
 
         <h3 class="mt-4">Token Endpoint</h3>
         <p><code>POST /oauth2/token</code></p>
-        <p class="text-muted">Server-to-server endpoint to exchange a code for an access token. Accepts <code>application/x-www-form-urlencoded</code>.</p>
+        <p class="text-muted">The server-to-server endpoint to exchange an authorization code for an access token.</p>
         <h6>Parameters</h6>
         <table class="table table-bordered">
             <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
             <tbody>
                 <tr><td><code>grant_type</code></td><td>Yes</td><td>Must be set to <code>authorization_code</code>.</td></tr>
-                <tr><td><code>code</code></td><td>Yes</td><td>The temporary authorization code from the previous step.</td></tr>
+                <tr><td><code>code</code></td><td>Yes</td><td>The temporary authorization code from the redirect.</td></tr>
                 <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The same redirect URI used in the authorization request.</td></tr>
                 <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's public client ID.</td></tr>
                 <tr><td><code>client_secret</code></td><td>Yes</td><td>Your application's client secret.</td></tr>
-                <tr><td><code>code_verifier</code></td><td>Yes</td><td>The PKCE code verifier.</td></tr>
+                <tr><td><code>code_verifier</code></td><td>Yes</td><td>The original PKCE code verifier.</td></tr>
             </tbody>
         </table>
+    </section>
 
-        <h3 class="mt-4">User Info Endpoint</h3>
+    <section id="example" class="my-5">
+        <h2>Full Example: Token Exchange in Python</h2>
+        <p class="text-muted">Here is a complete example of how your backend would handle the token exchange using the <code>requests</code> library.</p>
+        <pre><code>{% raw %}
+import requests
+
+# Assume you have these from your app's settings and the user's session
+CLIENT_ID = "your_client_id"
+CLIENT_SECRET = "your_client_secret"
+REDIRECT_URI = "https://your-app.com/callback"
+AUTHORIZATION_CODE = "code_from_the_redirect_url"
+CODE_VERIFIER = "the_verifier_you_saved_in_the_session"
+
+TOKEN_URL = "{{ request.url_root }}oauth2/token"
+
+def exchange_code_for_token():
+    payload = {
+        'grant_type': 'authorization_code',
+        'code': AUTHORIZATION_CODE,
+        'redirect_uri': REDIRECT_URI,
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'code_verifier': CODE_VERIFIER,
+    }
+
+    response = requests.post(TOKEN_URL, data=payload)
+
+    if response.status_code == 200:
+        token_data = response.json()
+        print("Access Token:", token_data.get("access_token"))
+        # Now you can save this token and use it to call the API
+    else:
+        print("Error:", response.json())
+        {% endraw %}</code></pre>
+    </section>
+
+    <section id="api" class="my-5">
+        <h2>User Info Endpoint</h2>
         <p><code>GET /api/v1/user</code></p>
         <p class="text-muted">Fetches the authenticated user's profile data. Requires a Bearer token in the Authorization header.</p>
         <h6>Example Request</h6>
         <pre><code>curl -H "Authorization: Bearer &lt;ACCESS_TOKEN&gt;" {{ request.url_root }}api/v1/user</code></pre>
+        <h6>Common Error Responses</h6>
+        <table class="table table-bordered">
+            <thead><tr><th>Status Code</th><th>Error</th><th>Meaning</th></tr></thead>
+            <tbody>
+                <tr><td><code>401 Unauthorized</code></td><td><code>invalid_token</code></td><td>The access token is expired, revoked, or malformed. The user needs to log in again.</td></tr>
+                <tr><td><code>403 Forbidden</code></td><td><code>insufficient_scope</code></td><td>The access token is valid, but it does not have the required scope to access the requested data.</td></tr>
+            </tbody>
+        </table>
     </section>
 
     <section id="scopes" class="my-5">
