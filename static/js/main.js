@@ -133,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Please enter both Client ID and Client Secret.');
                 return;
             }
+
+            startAuthBtn.disabled = true;
+
             sessionStorage.setItem('clientId', clientId);
             sessionStorage.setItem('clientSecret', clientSecret);
             const { code_verifier, code_challenge } = await generatePkceCodes();
@@ -170,14 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         exchangeTokenBtn.addEventListener('click', async () => {
-            const payload = {
-                code: authCodeInput.value,
-                client_id: clientIdInput.value,
-                client_secret: clientSecretInput.value,
-                redirect_uri: window.location.origin + window.location.pathname,
-                code_verifier: sessionStorage.getItem('code_verifier'),
-            };
+            exchangeTokenBtn.disabled = true;
             try {
+                const payload = {
+                    code: authCodeInput.value,
+                    client_id: clientIdInput.value,
+                    client_secret: clientSecretInput.value,
+                    redirect_uri: window.location.origin + window.location.pathname,
+                    code_verifier: sessionStorage.getItem('code_verifier'),
+                };
                 const response = await fetch('/proxy/token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -193,12 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 tokenResponseOutput.textContent = `Error: ${error.message}`;
+            } finally {
+                exchangeTokenBtn.disabled = false;
             }
         });
 
         fetchUserBtn.addEventListener('click', async () => {
-            if (!accessToken) return;
+            fetchUserBtn.disabled = true;
             try {
+                if (!accessToken) return;
                 const response = await fetch('/api/v1/user', {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -206,6 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 userResponseOutput.textContent = JSON.stringify(data, null, 2);
             } catch (error) {
                 userResponseOutput.textContent = `Error: ${error.message}`;
+            } finally {
+                fetchUserBtn.disabled = false;
             }
         });
     }
