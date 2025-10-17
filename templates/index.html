@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block title %}Home - PESU OAuth2{% endblock %}
+{% block content %}
+
+<section class="flow-step hero-box">
+    <video src="https://framerusercontent.com/assets/iWlVr4qV5BuFxjhc6g7QcPK5o.mp4" class="hero-video" autoplay loop muted playsinline></video>
+
+    <div class="container text-center position-relative">
+        <h1 class="display-2 fw-bold">A Single, Secure Login<br/>for the <span class="text-accent">PESU Community</span></h1>
+        <p class="lead mt-4">Power your projects—from hackathon apps to club websites—with a login system that never asks users to share their password.</p>
+        <div class="d-flex gap-2 justify-content-center mt-5">
+            <a href="{{ url_for('docs') }}" class="btn btn-primary btn-lg">For Developers</a>
+            <a href="{{ url_for('transparency') }}" class="btn btn-secondary btn-lg">How it's Secure</a>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+
+    <section class="section">
+        <div class="text-center mb-5 flow-step">
+            <h2 class="fw-bold">Simple for Users, Powerful for Developers</h2>
+            <p class="lead">We handle the complex security, so you don't have to.</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-6 flow-step">
+                <div class="feature-card h-100">
+                    <h4 class="fw-bold">For Students</h4>
+                    <p class="text-muted">Log in to any supported student-made app with your PESU ID without ever giving away your password. On the consent screen, you see exactly what data an app is requesting, and you are always in control.</p>
+                </div>
+            </div>
+            <div class="col-md-6 flow-step">
+                <div class="feature-card h-100">
+                    <h4 class="fw-bold">For Developers</h4>
+                    <p class="text-muted">Forget about building and securing login systems. Just plug in our OAuth2 service and focus on your app's core features. Get secure access to user data (with their consent) through a simple, straightforward API.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="section">
+        <div class="text-center mb-5 flow-step">
+            <h2 class="fw-bold">Why Trust This Service?</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 flow-step">
+                <div class="feature-card h-100">
+                    <h5 class="fw-bold">Your Password Stays with PESU</h5>
+                    <p class="text-muted">You always log in on the official PESU Academy website. Our service never sees, handles, or stores your password.</p>
+                </div>
+            </div>
+            <div class="col-md-4 flow-step">
+                <div class="feature-card h-100">
+                    <h5 class="fw-bold">You Are in Control</h5>
+                    <p class="text-muted">Applications can only access the information you explicitly approve. See what's requested on the consent screen and make the choice.</p>
+                </div>
+            </div>
+            <div class="col-md-4 flow-step">
+                <div class="feature-card h-100">
+                    <h5 class="fw-bold">Built in the Open</h5>
+                    <p class="text-muted">This entire project is open-source. Anyone can inspect the code on GitHub to verify how it works and ensure it's secure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="section text-center flow-step">
+        <h2 class="display-4 fw-bold">Ready to start your next project?</h2>
+        <p class="lead mt-3">Integrate secure PESU authentication in minutes and give your users an experience they can trust.</p>
+        <div class="mt-5">
+            <a href="{{ url_for('docs') }}" class="btn btn-primary btn-lg">Read the Docs</a>
+        </div>
+    </section>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

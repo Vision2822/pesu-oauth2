@@ -2,6 +2,8 @@ import os
 import time
 from functools import wraps
 from secrets import token_urlsafe
+import requests
+import re
 
 from flask import (
     Flask, Response, jsonify, render_template, request, session, redirect, url_for, flash
@@ -11,7 +13,7 @@ from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 
-from authlib.integrations.flask_oauth2 import AuthorizationServer
+from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector, current_token
 from authlib.integrations.sqla_oauth2 import (
     OAuth2ClientMixin,
     OAuth2AuthorizationCodeMixin,
@@ -19,7 +21,6 @@ from authlib.integrations.sqla_oauth2 import (
 )
 from authlib.oauth2.rfc6750 import BearerTokenValidator
 from authlib.oauth2.rfc7636 import CodeChallenge
-from authlib.integrations.flask_oauth2 import ResourceProtector
 from authlib.oauth2.rfc6749.grants import (
     AuthorizationCodeGrant as _AuthorizationCodeGrant,
     RefreshTokenGrant as _RefreshTokenGrant,
@@ -45,23 +46,28 @@ migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 
 AVAILABLE_SCOPES = {
-    'profile:basic': 'Read basic info (PRN, SRN, Name).',
-    'profile:academic': 'Read academic details (Branch, Semester).',
+    'profile:basic': 'Read your basic identity (Name, PRN, SRN).',
+    'profile:academic': 'Read your academic details (Program, Branch, Semester, Section, Campus).',
     'profile:photo': 'Read your profile photo.',
-    'profile:contact': 'Read your contact information (Placeholder).',
+    'profile:contact': 'Read your contact information (Email, Phone Number).',
 }
-
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     pesuprn = db.Column(db.String(80), unique=True, nullable=False, index=True)
     profile_data = db.Column(db.JSON, nullable=True)
 
+    def get_user_id(self):
+        return self.id
+
 class OAuth2Client(db.Model, OAuth2ClientMixin):
     __tablename__ = 'oauth2_client'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     user = db.relationship('User')
+
+    def check_client_secret(self, client_secret):
+        return bcrypt.check_password_hash(self.client_secret, client_secret)
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
     __tablename__ = 'oauth2_authorization_code'
@@ -80,11 +86,13 @@ class OAuth2Token(db.Model, OAuth2TokenMixin):
         expires_at = self.issued_at + self.expires_in * 2
         return expires_at >= time.time()
 
-
 def get_current_user():
     if 'user_id' in session:
         return User.query.get(session['user_id'])
     return None
+
+def query_client(client_id):
+    return OAuth2Client.query.filter_by(client_id=client_id).first()
 
 def save_token(token, request):
     user_id = request.user.get_user_id() if request.user else request.client.user_id
@@ -92,11 +100,7 @@ def save_token(token, request):
     db.session.add(item)
     db.session.commit()
 
-server = AuthorizationServer(
-    app,
-    query_client=lambda client_id: OAuth2Client.query.filter_by(client_id=client_id).first(),
-    save_token=save_token
-)
+server = AuthorizationServer(app, query_client=query_client, save_token=save_token)
 
 class AuthorizationCodeGrant(_AuthorizationCodeGrant):
     def save_authorization_code(self, code, request):
@@ -140,7 +144,6 @@ class MyTokenValidator(BearerTokenValidator):
 require_oauth = ResourceProtector()
 require_oauth.register_token_validator(MyTokenValidator())
 
-
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -152,10 +155,31 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
 @app.route('/')
 def index():
-    return "<h1>🎓 PESU OAuth2 Provider</h1>"
+    return render_template('index.html')
+
+@app.route('/docs')
+def docs():
+    return render_template('docs.html', available_scopes=AVAILABLE_SCOPES)
+
+@app.route('/tester')
+def tester():
+    default_client_id = os.getenv('TESTER_CLIENT_ID', '')
+    default_client_secret = os.getenv('TESTER_CLIENT_SECRET', '')
+    return render_template('tester.html', client_id=default_client_id, client_secret=default_client_secret)
+
+@app.route('/transparency')
+def transparency():
+    commit_sha = os.getenv('VERCEL_GIT_COMMIT_SHA')
+    repo_slug = os.getenv('VERCEL_GIT_REPO_SLUG')
+    owner = os.getenv('VERCEL_GIT_REPO_OWNER')
+    commit_url, repo_url = None, None
+    if owner and repo_slug:
+        repo_url = f"https://github.com/{owner}/{repo_slug}"
+        if commit_sha:
+            commit_url = f"{repo_url}/commit/{commit_sha}"
+    return render_template('transparency.html', commit_url=commit_url, repo_url=repo_url)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -222,8 +246,8 @@ def delete_client(client_id):
 @app.route('/oauth2/authorize', methods=['GET', 'POST'])
 def authorize():
     user = get_current_user()
-    if not user: return redirect(url_for('login', next=request.url))
-
+    if not user:
+        return redirect(url_for('login', next=request.url))
     if request.method == 'GET':
         try:
             grant = server.get_consent_grant(end_user=user)
@@ -231,52 +255,75 @@ def authorize():
         except Exception as e:
             flash(f"Authorization Error: {e}", "danger")
             return render_template('error.html', error=e)
-
     if request.form.get('confirm'):
         grant_user = user
-        grant_scope = ' '.join(request.form.getlist('scope'))
     else:
         grant_user = None
-        grant_scope = None
-
-    return server.create_authorization_response(grant_user=grant_user, grant_scope=grant_scope)
+    return server.create_authorization_response(grant_user=grant_user)
 
 @app.route('/oauth2/token', methods=['POST'])
 def issue_token():
     return server.create_token_response()
 
+@app.route('/proxy/token', methods=['POST'])
+def proxy_token():
+    try:
+        data = request.json
+        token_url = url_for('issue_token', _external=True)
+        payload = {
+            'grant_type': 'authorization_code',
+            'code': data.get('code'),
+            'redirect_uri': data.get('redirect_uri'),
+            'code_verifier': data.get('code_verifier'),
+            'client_id': data.get('client_id'),
+            'client_secret': data.get('client_secret'),
+        }
+        response = requests.post(token_url, data=payload)
+        response.raise_for_status()
+        return jsonify(response.json())
+    except requests.exceptions.HTTPError as e:
+        return jsonify(e.response.json()), e.response.status_code
+    except Exception as e:
+        return jsonify(error="An unexpected error occurred", details=str(e)), 500
+
 @app.route('/api/v1/user')
 @require_oauth()
 def user_info():
-    user = require_oauth.current_token.user
-    token_scopes = require_oauth.current_token.get_scope().split()
+    user = current_token.user
+    token_scopes = current_token.get_scope().split()
     profile = user.profile_data or {}
     response_data = {}
+
     if 'profile:basic' in token_scopes:
         response_data.update({
-            'prn': profile.get('prn'), 'srn': profile.get('srn'), 'name': profile.get('name'),
+            'name': profile.get('name'),
+            'prn': profile.get('prn'),
+            'srn': profile.get('srn'),
         })
+
     if 'profile:academic' in token_scopes:
         response_data.update({
-            'branch': profile.get('branch'), 'semester': profile.get('semester'),
+            'program': profile.get('program'),
+            'branch': profile.get('branch'),
+            'semester': profile.get('semester'),
+            'section': profile.get('section'),
+            'campus': profile.get('campus'),
+            'campus_code': profile.get('campus_code'),
         })
+
     if 'profile:photo' in token_scopes:
         response_data.update({'photo_base64': profile.get('photo_base64')})
-    if 'profile:contact' in token_scopes:
-        response_data.update({'email': None, 'phone': None})
-    if not response_data:
-        return jsonify(error="insufficient_scope"), 403
-    return jsonify(response_data)
 
-@app.route('/transparency')
-def transparency():
-    commit_sha = os.getenv('VERCEL_GIT_COMMIT_SHA')
-    repo_url = os.getenv('VERCEL_GIT_REPO_SLUG')
-    owner = os.getenv('VERCEL_GIT_REPO_OWNER')
-    if commit_sha and repo_url and owner:
-        github_url = f"https://github.com/{owner}/{repo_url}/commit/{commit_sha}"
-        return jsonify({"deployment_source": {"github_commit_url": github_url}})
-    return jsonify({"status": "dev"})
+    if 'profile:contact' in token_scopes:
+        response_data.update({
+            'email': profile.get('email'),
+            'phone': profile.get('phone'),
+        })
+
+    if not response_data:
+        return jsonify(error="insufficient_scope", message="The access token does not have the required scopes to access any data."), 403
+
+    return jsonify(response_data)
 
 @app.route('/api/badge')
 def vercel_badge():

@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block title %}Documentation - PESU OAuth2{% endblock %}
+{% block content %}
+<div class="container docs-content">
+    <div class="text-center">
+        <h1 class="display-4 fw-bold mb-4">Developer Documentation</h1>
+    </div>
+
+    <section id="flow" class="my-5">
+        <h2>Authorization Flow</h2>
+        <p class="text-muted">This service implements the OAuth 2.0 Authorization Code Grant with PKCE. The flow is as follows:</p>
+        <ol>
+            <li>Your application redirects the user to the <code>/oauth2/authorize</code> endpoint with your client details.</li>
+            <li>The user authenticates and grants consent.</li>
+            <li>The user is redirected back to your specified <code>redirect_uri</code> with a temporary <code>code</code>.</li>
+            <li>Your application's backend exchanges this <code>code</code> for an <code>access_token</code> at the <code>/oauth2/token</code> endpoint.</li>
+            <li>Your application uses the <code>access_token</code> to access protected resources like <code>/api/v1/user</code>.</li>
+        </ol>
+    </section>
+
+    <section id="endpoints" class="my-5">
+        <h2>API Endpoints</h2>
+
+        <h3 class="mt-4">Authorization Endpoint</h3>
+        <p><code>GET /oauth2/authorize</code></p>
+        <p class="text-muted">User-facing endpoint to initiate the login and consent flow.</p>
+        <h6>Parameters</h6>
+        <table class="table table-bordered">
+            <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's public client ID.</td></tr>
+                <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The absolute URI to redirect the user to after authorization. Must be whitelisted.</td></tr>
+                <tr><td><code>response_type</code></td><td>Yes</td><td>Must be set to <code>code</code>.</td></tr>
+                <tr><td><code>scope</code></td><td>Yes</td><td>A space-separated list of requested permissions.</td></tr>
+                <tr><td><code>state</code></td><td>Recommended</td><td>An opaque value used for CSRF protection.</td></tr>
+                <tr><td><code>code_challenge</code></td><td>Yes</td><td>A PKCE code challenge.</td></tr>
+                <tr><td><code>code_challenge_method</code></td><td>Yes</td><td>Must be set to <code>S256</code>.</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="mt-4">Token Endpoint</h3>
+        <p><code>POST /oauth2/token</code></p>
+        <p class="text-muted">Server-to-server endpoint to exchange a code for an access token. Accepts <code>application/x-www-form-urlencoded</code>.</p>
+        <h6>Parameters</h6>
+        <table class="table table-bordered">
+            <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>grant_type</code></td><td>Yes</td><td>Must be set to <code>authorization_code</code>.</td></tr>
+                <tr><td><code>code</code></td><td>Yes</td><td>The temporary authorization code from the previous step.</td></tr>
+                <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The same redirect URI used in the authorization request.</td></tr>
+                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's public client ID.</td></tr>
+                <tr><td><code>client_secret</code></td><td>Yes</td><td>Your application's client secret.</td></tr>
+                <tr><td><code>code_verifier</code></td><td>Yes</td><td>The PKCE code verifier.</td></tr>
+            </tbody>
+        </table>
+
+        <h3 class="mt-4">User Info Endpoint</h3>
+        <p><code>GET /api/v1/user</code></p>
+        <p class="text-muted">Fetches the authenticated user's profile data. Requires a Bearer token in the Authorization header.</p>
+        <h6>Example Request</h6>
+        <pre><code>curl -H "Authorization: Bearer &lt;ACCESS_TOKEN&gt;" {{ request.url_root }}api/v1/user</code></pre>
+    </section>
+
+    <section id="scopes" class="my-5">
+        <h2>Available Scopes</h2>
+        <table class="table table-bordered">
+            <thead><tr><th>Scope</th><th>Description</th></tr></thead>
+            <tbody>
+            {% for scope, description in available_scopes.items() %}
+                <tr><td><code>{{ scope }}</code></td><td>{{ description }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}
