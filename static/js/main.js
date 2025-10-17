@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function base64urlEncode(str) {
             return btoa(String.fromCharCode.apply(null, new Uint8Array(str)))
-                .replace(/\+/g, '-').replace(/\
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         }
 
         async function generatePkceCodes() {
