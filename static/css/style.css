@@ -259,3 +259,46 @@ h1, h2, h3, h4, h5, h6 {
 #page-content.fade-out {
     opacity: 0;
 }
+
+@media (max-width: 768px) {
+    .section {
+        padding: 50px 0;
+    }
+
+    .hero-box {
+        padding: 50px 0;
+        margin: 1rem 0;
+    }
+
+    .top-glow {
+        width: 100%;
+        height: 300px;
+        filter: blur(80px);
+    }
+
+    .background-glow {
+        filter: blur(60px);
+    }
+
+    .hero-video {
+        display: none;
+    }
+
+    .navbar {
+        backdrop-filter: none;
+        background: rgba(0, 0, 0, 0.95);
+    }
+
+    .display-2 {
+        font-size: 2.5rem;
+    }
+
+    .lead {
+        font-size: 1rem;
+    }
+
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}

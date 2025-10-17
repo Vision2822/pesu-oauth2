@@ -1,38 +1,62 @@
 {% extends "layout.html" %}
-{% block title %}Login - PESU OAuth2{% endblock %}
+{% block title %}API Tester - PESU OAuth2{% endblock %}
 {% block content %}
-<div class="container" style="max-width: 400px;">
-    <div class="text-center mb-5">
-        <h1 class="display-5 fw-bold">PESU Academy Login</h1>
-        <p class="text-muted">Sign in to grant application access.</p>
+<div class="container docs-content">
+    <div class="text-center">
+        <h1 class="display-4 fw-bold mb-4">Interactive API Tester</h1>
+        <p class="lead">Test the complete OAuth 2.0 Authorization Code flow without writing a single line of code.</p>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category or 'info' }}" role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="card" style="background-color: #111; border-color: var(--bs-border-color);">
-        <div class="card-body p-4">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="username" class="form-label">SRN / PRN</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                </div>
-                <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-primary">Sign In</button>
-                </div>
-            </form>
+    <section id="step1" class="my-5">
+        <h2>Step 1: Configure Client</h2>
+        <p class="text-muted">Enter the Client ID and Secret obtained from the Admin Panel. A default tester client can be pre-filled.</p>
+        <div class="mb-3">
+            <label class="form-label">Client ID</label>
+            <input type="text" id="clientId" class="form-control font-monospace" placeholder="Enter Client ID" value="{{ client_id }}">
         </div>
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Client Secret</label>
+            <input type="password" id="clientSecret" class="form-control font-monospace" placeholder="Enter Client Secret" value="{{ client_secret }}">
+        </div>
+    </section>
+
+    <section id="step2" class="my-5">
+        <h2>Step 2: Authorize</h2>
+        <p class="text-muted">This will generate PKCE codes, build the authorization URL, and redirect you to the login page.</p>
+        <button id="startAuth" class="btn btn-primary">Generate Codes & Start Authorization</button>
+        <div class="mt-3">
+            <small class="text-muted">Generated URL:</small>
+            <pre><code id="authUrlOutput"></code></pre>
+        </div>
+    </section>
+
+    <section id="step3" class="my-5">
+        <h2>Step 3: Exchange Code for Token</h2>
+        <p class="text-muted">After logging in and granting consent, you'll be redirected back here. The authorization code will be automatically filled below.</p>
+        <div class="mb-3">
+            <label class="form-label">Authorization Code</label>
+            <input type="text" id="authCode" class="form-control font-monospace" placeholder="Automatically filled after redirect..." readonly>
+        </div>
+        <button id="exchangeToken" class="btn btn-primary" disabled>Exchange Code</button>
+        <div class="mt-3">
+            <small class="text-muted">Token Response:</small>
+            <pre><code id="tokenResponse"></code></pre>
+        </div>
+    </section>
+
+    <section id="step4" class="my-5">
+        <h2>Step 4: Fetch User Data</h2>
+        <p class="text-muted">Use the acquired Access Token to request data from the protected API endpoint.</p>
+        <button id="fetchUser" class="btn btn-primary" disabled>Fetch User Info</button>
+        <div class="mt-3">
+            <small class="text-muted">API Response:</small>
+            <pre><code id="userResponse"></code></pre>
+        </div>
+    </section>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
