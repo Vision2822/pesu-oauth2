@@ -19,7 +19,7 @@
         <div class="card mt-4" style="background-color: #111; border: 1px solid var(--bs-border-color);">
             <div class="card-body">
                 <form method="POST" action="{{ url_for('admin') }}">
-                    <!-- CSRF Token -->
+
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <div class="mb-3">
@@ -33,7 +33,7 @@
                         <div class="form-text">e.g., http://127.0.0.1:5000/tester https://my-app.com/auth</div>
                     </div>
 
-                    <!-- Public Client Option -->
+
                     <div class="mb-4">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="is_public" value="true" id="isPublicSwitch">
@@ -104,7 +104,7 @@
                                 </div>
                             </div>
                             <form method="POST" action="{{ url_for('delete_client', client_id=client.id) }}" onsubmit="return confirm('Are you sure you want to delete \'{{ client.client_name }}\'? This action cannot be undone.');">
-                                <!-- CSRF Token -->
+
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i> Delete
@@ -124,7 +124,7 @@
         </div>
     </section>
 
-    <!-- Information Section -->
+
     <section class="my-5">
         <div class="alert alert-info" role="alert">
             <h5 class="alert-heading">

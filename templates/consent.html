@@ -9,14 +9,14 @@
             </h4>
         </div>
         <div class="card-body p-4">
-            <!-- Client Info -->
+
             <div class="text-center mb-4">
                 <h5 class="mb-2">
                     <strong>{{ grant.client.client_name }}</strong>
                 </h5>
                 <p class="text-muted mb-2">wants to access your PESU account</p>
 
-                <!-- Client Type Badge -->
+
                 {% if grant.client.client_secret is none %}
                     <span class="badge bg-info">
                         <i class="bi bi-shield"></i> Public Client
@@ -28,7 +28,7 @@
                 {% endif %}
             </div>
 
-            <!-- User Info -->
+
             <div class="alert alert-secondary text-center" style="background-color: #0a0a0a; border-color: var(--bs-border-color);">
                 <small class="text-muted">Logged in as:</small><br>
                 <strong>{{ user.profile_data.name if user.profile_data else 'User' }}</strong>
@@ -38,7 +38,7 @@
 
             <hr style="border-color: var(--bs-border-color);">
 
-            <!-- Granular Permissions -->
+
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="mb-0">
@@ -51,7 +51,7 @@
                 </div>
 
                 <form method="POST" id="consentForm">
-                    <!-- CSRF Token -->
+
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     {% for scope in grant.request.scope.split() %}
@@ -112,14 +112,14 @@
                         {% endif %}
                     {% endfor %}
 
-                    <!-- Warning if nothing selected -->
+
                     <div id="noSelectionWarning" class="alert alert-warning" style="display: none;">
                         <i class="bi bi-exclamation-triangle"></i>
                         <strong>Note:</strong> You haven't selected any data to share.
                         The application may not function properly without access to some data.
                     </div>
 
-                    <!-- Action Buttons -->
+
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" name="confirm" value="true" class="btn btn-primary btn-lg" onclick="return validateConsent()">
                             <i class="bi bi-check-circle"></i> Allow Access
@@ -131,7 +131,7 @@
                 </form>
             </div>
 
-            <!-- Info Notice -->
+
             <div class="mt-4 text-center">
                 <small class="text-muted">
                     <i class="bi bi-info-circle"></i>
