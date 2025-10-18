@@ -1,0 +1,524 @@
+{% extends "layout.html" %}
+{% block title %}FAQ - PESU OAuth2{% endblock %}
+{% block content %}
+<div class="container docs-content">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-4">Frequently Asked Questions</h1>
+        <p class="lead text-muted">Quick answers to common questions</p>
+    </div>
+
+    <!-- General Questions -->
+    <section class="my-5">
+        <h2 class="mb-4">📌 General</h2>
+
+        <div class="accordion" id="accordionGeneral">
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        What is PESU OAuth2?
+                    </button>
+                </h3>
+                <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#accordionGeneral">
+                    <div class="accordion-body">
+                        <p>
+                            A student-built authentication service that lets PESU students sign into
+                            third-party apps using their PESU Academy credentials—without creating
+                            separate accounts for every app.
+                        </p>
+                        <p class="mb-0">
+                            Think of it like "Sign in with Google" but for PESU students!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        Is this an official PES University service?
+                    </button>
+                </h3>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionGeneral">
+                    <div class="accordion-body">
+                        <div class="alert alert-warning mb-3">
+                            <strong>⚠️ NO</strong>, this is NOT an official service.
+                        </div>
+                        <p class="mb-0">
+                            PESU OAuth2 is an independent student project for educational purposes.
+                            It is NOT affiliated with, endorsed by, or supported by PES University.
+                            See our <a href="{{ url_for('about') }}">About page</a> for details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        Who built this and why?
+                    </button>
+                </h3>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionGeneral">
+                    <div class="accordion-body">
+                        <p>Built by a PESU student to:</p>
+                        <ul>
+                            <li>Learn OAuth 2.0 authentication flows</li>
+                            <li>Practice secure web development</li>
+                            <li>Help fellow student developers</li>
+                            <li>Contribute to the PESU tech community</li>
+                        </ul>
+                        <p class="mb-0">
+                            The project is fully <a href="https://github.com/vision2822/pesu-oauth2" target="_blank">open source</a>!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        Is it free to use?
+                    </button>
+                </h3>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionGeneral">
+                    <div class="accordion-body">
+                        <p class="mb-0">
+                            <strong>Yes, completely free!</strong> This is a non-commercial educational project.
+                            There are no fees, subscriptions, or hidden costs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Questions -->
+    <section class="my-5">
+        <h2 class="mb-4">🔒 Security & Privacy</h2>
+
+        <div class="accordion" id="accordionSecurity">
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec1">
+                        Is my PESU password stored on your servers?
+                    </button>
+                </h3>
+                <div id="sec1" class="accordion-collapse collapse show" data-bs-parent="#accordionSecurity">
+                    <div class="accordion-body">
+                        <div class="alert alert-success mb-3">
+                            <strong>✅ Absolutely NOT!</strong>
+                        </div>
+                        <p>When you login:</p>
+                        <ol>
+                            <li>Your credentials go directly to PESU Academy's servers (not ours)</li>
+                            <li>PESU Academy validates your password</li>
+                            <li>If correct, PESU Academy sends back your profile data</li>
+                            <li>We store only your PRN and profile information (never your password)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec2">
+                        What data do you collect about me?
+                    </button>
+                </h3>
+                <div id="sec2" class="accordion-collapse collapse" data-bs-parent="#accordionSecurity">
+                    <div class="accordion-body">
+                        <p>We collect ONLY what you explicitly consent to:</p>
+                        <ul>
+                            <li><strong>PESU PRN</strong> (your identifier)</li>
+                            <li><strong>Profile data</strong> you authorize (name, email, branch, etc.)</li>
+                            <li><strong>OAuth tokens</strong> (encrypted, temporary)</li>
+                            <li><strong>Usage logs</strong> (for security, kept 30 days)</li>
+                        </ul>
+                        <p class="mb-0">
+                            You can even select individual fields! For example, share your email but not your phone.
+                            See our <a href="{{ url_for('about') }}">About page</a> for details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec3">
+                        How can I revoke access to an application?
+                    </button>
+                </h3>
+                <div id="sec3" class="accordion-collapse collapse" data-bs-parent="#accordionSecurity">
+                    <div class="accordion-body">
+                        <p>To revoke access:</p>
+                        <ol>
+                            <li>Go to the <a href="{{ url_for('admin') }}">Admin Panel</a></li>
+                            <li>Login with your PESU credentials</li>
+                            <li>Find the application in your client list</li>
+                            <li>Click "Delete" to revoke all tokens</li>
+                        </ol>
+                        <p class="mb-0">
+                            The application will immediately lose access to your data.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec4">
+                        Should I trust third-party applications?
+                    </button>
+                </h3>
+                <div id="sec4" class="accordion-collapse collapse" data-bs-parent="#accordionSecurity">
+                    <div class="accordion-body">
+                        <div class="alert alert-warning mb-3">
+                            <strong>⚠️ Review Carefully!</strong>
+                        </div>
+                        <p>We do NOT verify third-party apps. Before authorizing:</p>
+                        <ul>
+                            <li>Check what data they're requesting</li>
+                            <li>Only grant access to apps you trust</li>
+                            <li>You can revoke access anytime</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developer Questions -->
+    <section class="my-5">
+        <h2 class="mb-4">👨‍💻 For Developers</h2>
+
+        <div class="accordion" id="accordionDev">
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#dev1">
+                        How do I integrate this into my app?
+                    </button>
+                </h3>
+                <div id="dev1" class="accordion-collapse collapse show" data-bs-parent="#accordionDev">
+                    <div class="accordion-body">
+                        <p><strong>Quick Start:</strong></p>
+                        <ol>
+                            <li>Go to the <a href="{{ url_for('admin') }}">Admin Panel</a> and create an OAuth client</li>
+                            <li>Choose "Public Client" for SPAs/mobile or "Confidential Client" for backend</li>
+                            <li>Note your Client ID (and Secret if confidential)</li>
+                            <li>Follow our <a href="{{ url_for('docs') }}">Documentation</a> for code examples</li>
+                            <li>Try the <a href="{{ url_for('tester') }}">Interactive Tester</a> to understand the flow</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#dev2">
+                        What's the difference between Public and Confidential clients?
+                    </button>
+                </h3>
+                <div id="dev2" class="accordion-collapse collapse" data-bs-parent="#accordionDev">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><span class="badge bg-info">Public Client</span></h6>
+                                <p><strong>Use for:</strong></p>
+                                <ul class="small">
+                                    <li>React/Vue/Angular SPAs</li>
+                                    <li>Mobile apps (iOS/Android)</li>
+                                    <li>Desktop applications</li>
+                                </ul>
+                                <p class="small mb-0"><strong>Security:</strong> PKCE only (no secret)</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><span class="badge bg-success">Confidential Client</span></h6>
+                                <p><strong>Use for:</strong></p>
+                                <ul class="small">
+                                    <li>Backend web apps</li>
+                                    <li>Server-to-server</li>
+                                    <li>Node.js/Python servers</li>
+                                </ul>
+                                <p class="small mb-0"><strong>Security:</strong> Client secret + PKCE</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#dev3">
+                        What is PKCE?
+                    </button>
+                </h3>
+                <div id="dev3" class="accordion-collapse collapse" data-bs-parent="#accordionDev">
+                    <div class="accordion-body">
+                        <p>
+                            <strong>PKCE</strong> (Proof Key for Code Exchange) is a security feature
+                            that prevents authorization code interception.
+                        </p>
+                        <p><strong>Simple explanation:</strong></p>
+                        <ol>
+                            <li>Your app generates a random secret (code_verifier)</li>
+                            <li>Creates a hash of it (code_challenge)</li>
+                            <li>Sends the hash when requesting authorization</li>
+                            <li>Sends the original secret when exchanging for tokens</li>
+                            <li>Server verifies they match</li>
+                        </ol>
+                        <p class="mb-0">
+                            See our <a href="{{ url_for('docs') }}">Docs</a> for code examples.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#dev4">
+                        Are there rate limits?
+                    </button>
+                </h3>
+                <div id="dev4" class="accordion-collapse collapse" data-bs-parent="#accordionDev">
+                    <div class="accordion-body">
+                        <p>Yes, to ensure fair usage:</p>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Limit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Login</td>
+                                    <td>10/min per IP</td>
+                                </tr>
+                                <tr>
+                                    <td>Token requests</td>
+                                    <td>30/min per IP</td>
+                                </tr>
+                                <tr>
+                                    <td>API calls</td>
+                                    <td>200/day per IP</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Questions -->
+    <section class="my-5">
+        <h2 class="mb-4">🛠️ Technical</h2>
+
+        <div class="accordion" id="accordionTech">
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#tech1">
+                        How long do access tokens last?
+                    </button>
+                </h3>
+                <div id="tech1" class="accordion-collapse collapse show" data-bs-parent="#accordionTech">
+                    <div class="accordion-body">
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Token Type</th>
+                                    <th>Lifetime</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Access Token</td>
+                                    <td>1 hour</td>
+                                </tr>
+                                <tr>
+                                    <td>Refresh Token</td>
+                                    <td>2 hours</td>
+                                </tr>
+                                <tr>
+                                    <td>Authorization Code</td>
+                                    <td>10 minutes (one-time use)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="mb-0 small text-muted">
+                            Use refresh tokens to get new access tokens without re-authentication.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#tech2">
+                        Can I self-host this?
+                    </button>
+                </h3>
+                <div id="tech2" class="accordion-collapse collapse" data-bs-parent="#accordionTech">
+                    <div class="accordion-body">
+                        <div class="alert alert-success mb-3">
+                            <strong>✅ Yes!</strong> This project is open source (MIT License).
+                        </div>
+                        <p>To deploy your own:</p>
+                        <ol>
+                            <li>Clone the <a href="https://github.com/vision2822/pesu-oauth2" target="_blank">GitHub repo</a></li>
+                            <li>Follow setup instructions in README</li>
+                            <li>Configure environment variables</li>
+                            <li>Deploy to Vercel, Heroku, or any Python host</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#tech3">
+                        Where is this hosted?
+                    </button>
+                </h3>
+                <div id="tech3" class="accordion-collapse collapse" data-bs-parent="#accordionTech">
+                    <div class="accordion-body">
+                        <ul class="mb-0">
+                            <li><strong>Platform:</strong> Vercel (serverless)</li>
+                            <li><strong>Database:</strong> PostgreSQL</li>
+                            <li><strong>Source Code:</strong> <a href="https://github.com/vision2822/pesu-oauth2" target="_blank">GitHub</a></li>
+                            <li><strong>Current Version:</strong> <a href="{{ url_for('transparency') }}">View Deployment</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Troubleshooting -->
+    <section class="my-5">
+        <h2 class="mb-4">🐛 Troubleshooting</h2>
+
+        <div class="accordion" id="accordionTrouble">
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#trouble1">
+                        Getting "invalid_client" error
+                    </button>
+                </h3>
+                <div id="trouble1" class="accordion-collapse collapse show" data-bs-parent="#accordionTrouble">
+                    <div class="accordion-body">
+                        <p>Common causes:</p>
+                        <ul>
+                            <li>❌ Incorrect <code>client_id</code> or <code>client_secret</code></li>
+                            <li>❌ Public client sending <code>client_secret</code> (don't!)</li>
+                            <li>❌ Confidential client missing <code>client_secret</code></li>
+                        </ul>
+                        <p class="mb-0"><strong>Fix:</strong> Double-check credentials and client type.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#trouble2">
+                        Redirect URI mismatch error
+                    </button>
+                </h3>
+                <div id="trouble2" class="accordion-collapse collapse" data-bs-parent="#accordionTrouble">
+                    <div class="accordion-body">
+                        <p>
+                            The <code>redirect_uri</code> must <strong>exactly match</strong>
+                            one registered in your client settings.
+                        </p>
+                        <p>Common issues:</p>
+                        <ul>
+                            <li>❌ <code>http://</code> vs <code>https://</code></li>
+                            <li>❌ Trailing slash: <code>/callback</code> vs <code>/callback/</code></li>
+                            <li>❌ Port numbers: <code>:5000</code> vs <code>:3000</code></li>
+                        </ul>
+                        <p class="mb-0">
+                            <strong>Fix:</strong> Update redirect URIs in the Admin Panel.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item bg-dark">
+                <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#trouble3">
+                        401 Unauthorized on API requests
+                    </button>
+                </h3>
+                <div id="trouble3" class="accordion-collapse collapse" data-bs-parent="#accordionTrouble">
+                    <div class="accordion-body">
+                        <p>Check:</p>
+                        <ul>
+                            <li>✅ Sending <code>Authorization: Bearer YOUR_TOKEN</code> header?</li>
+                            <li>✅ Token expired? (1 hour lifetime)</li>
+                            <li>✅ Token revoked?</li>
+                        </ul>
+                        <p class="mb-0">
+                            Use refresh token to get a new access token if expired.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Still Have Questions? -->
+    <section class="my-5 text-center">
+        <h2>Still Have Questions?</h2>
+        <p class="lead text-muted mb-4">We're here to help!</p>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-dark border h-100">
+                    <div class="card-body">
+                        <h5><i class="bi bi-book"></i> Documentation</h5>
+                        <p class="text-muted small">Comprehensive guides and examples</p>
+                        <a href="{{ url_for('docs') }}" class="btn btn-outline-primary btn-sm">Read Docs</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-dark border h-100">
+                    <div class="card-body">
+                        <h5><i class="bi bi-play-circle"></i> Try It Out</h5>
+                        <p class="text-muted small">Interactive OAuth flow tester</p>
+                        <a href="{{ url_for('tester') }}" class="btn btn-outline-primary btn-sm">Launch Tester</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-dark border h-100">
+                    <div class="card-body">
+                        <h5><i class="bi bi-github"></i> Report Issue</h5>
+                        <p class="text-muted small">Bug reports and questions</p>
+                        <a href="https://github.com/vision2822/pesu-oauth2/issues" target="_blank" class="btn btn-outline-primary btn-sm">GitHub Issues</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.accordion-button {
+    font-size: 1rem;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #1a1a1a;
+    color: #fff;
+}
+
+.accordion-item {
+    border-color: var(--bs-border-color);
+    margin-bottom: 0.5rem;
+}
+
+.table {
+    color: inherit;
+}
+</style>
+{% endblock %}

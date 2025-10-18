@@ -14,6 +14,7 @@ from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy import text
 
 # --- SECURITY & PRODUCTION ADDITIONS ---
 from flask_limiter import Limiter
@@ -369,6 +370,13 @@ def tester():
     return render_template('tester.html',
                          client_id=default_client_id,
                          available_scopes=AVAILABLE_SCOPES)
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
 
 @app.route('/transparency')
 def transparency():
@@ -708,7 +716,7 @@ def vercel_badge():
 @app.route('/health')
 def health():
     try:
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))  # Wrap in text()
         return jsonify(status='healthy', environment=ENV), 200
     except Exception as e:
         logger.error(f"Health check failed: {e}")

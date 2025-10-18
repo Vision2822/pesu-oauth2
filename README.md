@@ -18,6 +18,14 @@ A **production-ready**, **privacy-focused** OAuth2 authorization server for PESU
 
 ---
 
+## 🔒 Security
+
+Found a security vulnerability? Please **DO NOT** open a public issue.
+
+Instead, email: csprajval@example.com
+
+---
+
 ## 🚀 Quick Start
 
 ### For Application Developers
@@ -182,6 +190,18 @@ Users can **individually select** which fields to share within each scope:
 - ✅ Share email but not phone
 - ✅ Share name and PRN but not SRN
 - ✅ Complete control over privacy
+
+---
+
+## ⚡ Rate Limits
+
+To ensure fair usage and prevent abuse:
+
+- **Login attempts**: 10 per minute per IP
+- **Token requests**: 30 per minute per IP
+- **API requests**: 50 per hour per token
+
+These limits are subject to change.
 
 ---
 
