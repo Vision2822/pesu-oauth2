@@ -1,36 +1,304 @@
 {% extends "layout.html" %}
 {% block title %}Authorize Access{% endblock %}
 {% block content %}
-<div class="container" style="max-width: 500px;">
+<div class="container" style="max-width: 650px;">
     <div class="card" style="background-color: #111; border-color: var(--bs-border-color);">
-        <div class="card-header text-center border-bottom-0 pt-4">
-            <h4 class="fw-bold">Authorize Application</h4>
+        <div class="card-header text-center border-bottom pt-4 pb-3" style="border-color: var(--bs-border-color) !important;">
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-shield-check text-primary"></i> Authorize Application
+            </h4>
         </div>
         <div class="card-body p-4">
-            <p class="text-center">
-                <strong>{{ grant.client.client_name }}</strong> wants to access your account.
-            </p>
-            <p class="text-muted text-center small">Logged in as: {{ user.profile_data.name }} ({{ user.pesuprn }})</p>
+            <!-- Client Info -->
+            <div class="text-center mb-4">
+                <h5 class="mb-2">
+                    <strong>{{ grant.client.client_name }}</strong>
+                </h5>
+                <p class="text-muted mb-2">wants to access your PESU account</p>
+
+                <!-- Client Type Badge -->
+                {% if grant.client.client_secret is none %}
+                    <span class="badge bg-info">
+                        <i class="bi bi-shield"></i> Public Client
+                    </span>
+                {% else %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-shield-check"></i> Verified Client
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- User Info -->
+            <div class="alert alert-secondary text-center" style="background-color: #0a0a0a; border-color: var(--bs-border-color);">
+                <small class="text-muted">Logged in as:</small><br>
+                <strong>{{ user.profile_data.name if user.profile_data else 'User' }}</strong>
+                <br>
+                <code class="text-light">{{ user.pesuprn }}</code>
+            </div>
+
             <hr style="border-color: var(--bs-border-color);">
-            <p>This application will be able to:</p>
 
-            <ul class="list-group list-group-flush mb-4">
-                {% for scope in grant.request.scope.split() %}
-                    {% if scope in available_scopes %}
-                    <li class="list-group-item" style="background-color: transparent;">
-                        {{ available_scopes[scope] }}
-                    </li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
-
-            <form method="post">
-                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                    <button type="submit" name="confirm" value="true" class="btn btn-primary px-4">Allow</button>
-                    <button type="submit" name="confirm" value="" class="btn btn-outline-secondary px-4">Deny</button>
+            <!-- Granular Permissions -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="bi bi-key"></i> Choose what to share:
+                    </h6>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">Select All</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">Deselect All</button>
+                    </div>
                 </div>
-            </form>
+
+                <form method="POST" id="consentForm">
+                    <!-- CSRF Token -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    {% for scope in grant.request.scope.split() %}
+                        {% if scope in scope_fields %}
+                        <div class="card mb-3" style="background-color: #0a0a0a; border-color: var(--bs-border-color);">
+                            <div class="card-header" style="background-color: #1a1a1a; border-color: var(--bs-border-color);">
+                                <div class="form-check">
+                                    <input class="form-check-input scope-checkbox" type="checkbox"
+                                           id="scope-{{ scope }}"
+                                           data-scope="{{ scope }}"
+                                           checked
+                                           onchange="toggleScopeFields('{{ scope }}', this.checked)">
+                                    <label class="form-check-label fw-bold" for="scope-{{ scope }}">
+                                        <code class="text-info">{{ scope }}</code>
+                                        <br>
+                                        <small class="text-muted">{{ available_scopes[scope] }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="ms-4">
+                                    {% for field, description in scope_fields[scope].items() %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input field-checkbox"
+                                               type="checkbox"
+                                               name="granted_fields"
+                                               value="{{ scope }}:{{ field }}"
+                                               id="field-{{ scope }}-{{ field }}"
+                                               data-scope="{{ scope }}"
+                                               data-field="{{ field }}"
+                                               checked>
+                                        <label class="form-check-label" for="field-{{ scope }}-{{ field }}">
+                                            <strong>{{ field }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ description }}</small>
+                                            {% if user.profile_data and user.profile_data.get(field) %}
+                                                <br>
+                                                <small class="text-success">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    {% if field == 'photo_base64' %}
+                                                        Photo available
+                                                    {% else %}
+                                                        Current value: <code>{{ user.profile_data[field] }}</code>
+                                                    {% endif %}
+                                                </small>
+                                            {% else %}
+                                                <br>
+                                                <small class="text-warning">
+                                                    <i class="bi bi-exclamation-circle"></i> Not available in your profile
+                                                </small>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Warning if nothing selected -->
+                    <div id="noSelectionWarning" class="alert alert-warning" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Note:</strong> You haven't selected any data to share.
+                        The application may not function properly without access to some data.
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" name="confirm" value="true" class="btn btn-primary btn-lg" onclick="return validateConsent()">
+                            <i class="bi bi-check-circle"></i> Allow Access
+                        </button>
+                        <button type="submit" name="confirm" value="" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Deny
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Info Notice -->
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    You can revoke access at any time. Only checked items will be shared.
+                </small>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+// Toggle all fields within a scope when scope checkbox is toggled
+function toggleScopeFields(scope, checked) {
+    // Use data-scope attribute instead of class to avoid CSS selector issues with colons
+    const fieldCheckboxes = document.querySelectorAll(`[data-scope="${scope}"].field-checkbox`);
+
+    fieldCheckboxes.forEach(checkbox => {
+        if (checked) {
+            // Enable and check all children
+            checkbox.disabled = false;
+            checkbox.checked = true;
+        } else {
+            // Disable and uncheck all children
+            checkbox.disabled = true;
+            checkbox.checked = false;
+        }
+    });
+
+    updateWarning();
+}
+
+// Check if all fields in a scope are checked, update parent accordingly
+function updateScopeCheckbox(scope) {
+    const fieldCheckboxes = document.querySelectorAll(`[data-scope="${scope}"].field-checkbox`);
+    const scopeCheckbox = document.getElementById(`scope-${scope}`);
+
+    if (!scopeCheckbox) return;
+
+    // Filter out disabled checkboxes
+    const enabledCheckboxes = Array.from(fieldCheckboxes).filter(cb => !cb.disabled);
+
+    if (enabledCheckboxes.length === 0) return;
+
+    const allChecked = enabledCheckboxes.every(cb => cb.checked);
+    const noneChecked = enabledCheckboxes.every(cb => !cb.checked);
+
+    if (allChecked) {
+        scopeCheckbox.checked = true;
+        scopeCheckbox.indeterminate = false;
+    } else if (noneChecked) {
+        scopeCheckbox.checked = false;
+        scopeCheckbox.indeterminate = false;
+    } else {
+        scopeCheckbox.checked = true; // Keep checked if some children are checked
+        scopeCheckbox.indeterminate = true;
+    }
+}
+
+// Select all fields
+function selectAll() {
+    // First enable all scopes
+    document.querySelectorAll('.scope-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+        checkbox.indeterminate = false;
+        const scope = checkbox.dataset.scope;
+        if (scope) {
+            toggleScopeFields(scope, true);
+        }
+    });
+
+    updateWarning();
+}
+
+// Deselect all fields
+function deselectAll() {
+    // First uncheck all scopes
+    document.querySelectorAll('.scope-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.indeterminate = false;
+        const scope = checkbox.dataset.scope;
+        if (scope) {
+            toggleScopeFields(scope, false);
+        }
+    });
+
+    updateWarning();
+}
+
+// Update warning if nothing is selected
+function updateWarning() {
+    const anyChecked = Array.from(document.querySelectorAll('.field-checkbox'))
+        .filter(cb => !cb.disabled && cb.checked).length > 0;
+    document.getElementById('noSelectionWarning').style.display = anyChecked ? 'none' : 'block';
+}
+
+// Validate before submission
+function validateConsent() {
+    const checkedFields = Array.from(document.querySelectorAll('.field-checkbox'))
+        .filter(cb => !cb.disabled && cb.checked);
+
+    if (checkedFields.length === 0) {
+        return confirm('You haven\'t selected any data to share. The application may not work properly. Continue anyway?');
+    }
+
+    return true;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add change listeners to all field checkboxes
+    document.querySelectorAll('.field-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const scope = this.dataset.scope;
+            if (scope) {
+                updateScopeCheckbox(scope);
+            }
+            updateWarning();
+        });
+    });
+
+    // Initialize all scope checkboxes state
+    document.querySelectorAll('.scope-checkbox').forEach(scopeCheckbox => {
+        const scope = scopeCheckbox.dataset.scope;
+        if (scope) {
+            updateScopeCheckbox(scope);
+        }
+    });
+
+    // Initial warning check
+    updateWarning();
+});
+</script>
+
+<style>
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-input:indeterminate {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Style for disabled checkboxes */
+.form-check-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.form-check-input:disabled ~ .form-check-label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.card-header .form-check-input {
+    transform: scale(1.2);
+}
+
+code {
+    background-color: #1a1a1a;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.btn-sm {
+    font-size: 0.75rem;
+}
+</style>
 {% endblock %}

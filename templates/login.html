@@ -20,9 +20,13 @@
     <div class="card" style="background-color: #111; border-color: var(--bs-border-color);">
         <div class="card-body p-4">
             <form method="POST">
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                 <div class="mb-3">
                     <label for="username" class="form-label">SRN / PRN</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+                    <input type="text" class="form-control" id="username" name="username"
+                           placeholder="PES1UG21CS001" required autofocus>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
@@ -33,6 +37,12 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <div class="text-center mt-3">
+        <small class="text-muted">
+            <i class="bi bi-shield-lock"></i> Your credentials are securely authenticated with PESU Academy
+        </small>
     </div>
 </div>
 {% endblock %}

@@ -7,41 +7,131 @@
         <p class="lead">Integrate secure PESU authentication into your application in minutes.</p>
     </div>
 
+    <!-- NEW: Client Types Section -->
+    <section id="client-types" class="my-5">
+        <h2>Client Types</h2>
+        <p class="text-muted">This OAuth2 provider supports two types of clients based on their ability to securely store credentials:</p>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card" style="background-color: #111; border: 1px solid var(--bs-border-color);">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <span class="badge bg-info">Public Clients</span>
+                        </h5>
+                        <p class="card-text text-muted">Cannot securely store a client secret.</p>
+                        <h6>Use Cases:</h6>
+                        <ul>
+                            <li>Single-Page Applications (React, Vue, Angular)</li>
+                            <li>Mobile Applications (iOS, Android)</li>
+                            <li>Desktop Applications</li>
+                            <li>JavaScript-based apps</li>
+                        </ul>
+                        <div class="alert alert-warning">
+                            <small><strong>Security:</strong> PKCE is <strong>required</strong> and provides protection without a client secret.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card" style="background-color: #111; border: 1px solid var(--bs-border-color);">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <span class="badge bg-success">Confidential Clients</span>
+                        </h5>
+                        <p class="card-text text-muted">Can securely store a client secret on a backend server.</p>
+                        <h6>Use Cases:</h6>
+                        <ul>
+                            <li>Web Applications with Backend</li>
+                            <li>Server-to-Server Integrations</li>
+                            <li>Microservices</li>
+                            <li>Any application with a secure server</li>
+                        </ul>
+                        <div class="alert alert-success">
+                            <small><strong>Security:</strong> Client secret + PKCE (recommended) for maximum security.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="flow" class="my-5">
         <h2>Authorization Flow</h2>
-        <p class="text-muted">This service implements the OAuth 2.0 Authorization Code Grant with PKCE. The flow is as follows:</p>
+        <p class="text-muted">This service implements the OAuth 2.0 Authorization Code Grant with PKCE (Proof Key for Code Exchange). The flow is as follows:</p>
         <ol>
-            <li>Your application generates a PKCE `code_verifier` and `code_challenge`.</li>
-            <li>You redirect the user to the <code>/oauth2/authorize</code> endpoint with your client details and the `code_challenge`.</li>
+            <li>Your application generates a PKCE <code>code_verifier</code> and <code>code_challenge</code>.</li>
+            <li>You redirect the user to the <code>/oauth2/authorize</code> endpoint with your client details and the <code>code_challenge</code>.</li>
             <li>The user authenticates with PESU and grants consent to your application.</li>
             <li>The user is redirected back to your specified <code>redirect_uri</code> with a temporary authorization <code>code</code>.</li>
-            <li>Your application's backend server exchanges this <code>code</code> (along with the original `code_verifier`) for an <code>access_token</code> at the <code>/oauth2/token</code> endpoint.</li>
+            <li>Your application exchanges this <code>code</code> (along with the original <code>code_verifier</code>) for an <code>access_token</code> at the <code>/oauth2/token</code> endpoint.</li>
             <li>Your application uses the <code>access_token</code> to access protected resources like <code>/api/v1/user</code>.</li>
         </ol>
     </section>
 
     <section id="pkce" class="my-5">
         <h2>Generating PKCE Codes</h2>
-        <p class="text-muted">PKCE is required. You must generate a `code_verifier` and a `code_challenge` on the client-side before redirecting the user. Here is an example in Python:</p>
-        <pre><code>{% raw %}
-import hashlib
+        <p class="text-muted">PKCE is <strong>required for all clients</strong>. You must generate a <code>code_verifier</code> and a <code>code_challenge</code> before redirecting the user.</p>
+
+        <ul class="nav nav-tabs mt-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pkce-js" type="button">JavaScript</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pkce-python" type="button">Python</button>
+            </li>
+        </ul>
+        <div class="tab-content mt-3">
+            <div class="tab-pane fade show active" id="pkce-js">
+                <pre><code>{% raw %}// Generate random string
+function generateRandomString(length) {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+}
+
+// Generate code_verifier
+const codeVerifier = generateRandomString(128);
+
+// Generate code_challenge from verifier
+async function generateCodeChallenge(verifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+// Store codeVerifier securely (e.g., sessionStorage)
+sessionStorage.setItem('code_verifier', codeVerifier);{% endraw %}</code></pre>
+            </div>
+            <div class="tab-pane fade" id="pkce-python">
+                <pre><code>{% raw %}import hashlib
 import base64
-import os
+import secrets
 
 def generate_pkce_codes():
     # 1. Generate a high-entropy random string
-    code_verifier = base64.urlsafe_b64encode(os.urandom(40)).decode('utf-8')
-    code_verifier = re.sub('[^a-zA-Z0-9]+', '', code_verifier)
+    code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8')
+    code_verifier = code_verifier.rstrip('=')
 
     # 2. Create the code_challenge by SHA256 hashing the verifier
     code_challenge = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8').replace('=', '')
+    code_challenge = base64.urlsafe_b64encode(code_challenge).decode('utf-8')
+    code_challenge = code_challenge.rstrip('=')
 
     return code_verifier, code_challenge
 
-# You will then use the code_challenge in your authorization URL,
-# and save the code_verifier in the user's session to use later.
-        {% endraw %}</code></pre>
+# Store code_verifier in session for later use
+code_verifier, code_challenge = generate_pkce_codes()
+session['code_verifier'] = code_verifier{% endraw %}</code></pre>
+            </div>
+        </div>
     </section>
 
     <section id="endpoints" class="my-5">
@@ -54,19 +144,19 @@ def generate_pkce_codes():
         <table class="table table-bordered">
             <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
             <tbody>
-                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's public client ID.</td></tr>
-                <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The absolute URI to redirect the user to after authorization. Must be whitelisted.</td></tr>
                 <tr><td><code>response_type</code></td><td>Yes</td><td>Must be set to <code>code</code>.</td></tr>
+                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's client ID.</td></tr>
+                <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The absolute URI to redirect the user to after authorization. Must be whitelisted.</td></tr>
                 <tr><td><code>scope</code></td><td>Yes</td><td>A space-separated list of requested permissions.</td></tr>
                 <tr><td><code>state</code></td><td>Recommended</td><td>An opaque value used for CSRF protection.</td></tr>
-                <tr><td><code>code_challenge</code></td><td>Yes</td><td>The PKCE code challenge (S256).</td></tr>
+                <tr><td><code>code_challenge</code></td><td>Yes</td><td>The PKCE code challenge (Base64URL-encoded SHA256 hash).</td></tr>
                 <tr><td><code>code_challenge_method</code></td><td>Yes</td><td>Must be set to <code>S256</code>.</td></tr>
             </tbody>
         </table>
 
         <h3 class="mt-4">Token Endpoint</h3>
         <p><code>POST /oauth2/token</code></p>
-        <p class="text-muted">The server-to-server endpoint to exchange an authorization code for an access token.</p>
+        <p class="text-muted">The endpoint to exchange an authorization code for an access token.</p>
         <h6>Parameters</h6>
         <table class="table table-bordered">
             <thead><tr><th>Name</th><th>Required</th><th>Description</th></tr></thead>
@@ -74,25 +164,78 @@ def generate_pkce_codes():
                 <tr><td><code>grant_type</code></td><td>Yes</td><td>Must be set to <code>authorization_code</code>.</td></tr>
                 <tr><td><code>code</code></td><td>Yes</td><td>The temporary authorization code from the redirect.</td></tr>
                 <tr><td><code>redirect_uri</code></td><td>Yes</td><td>The same redirect URI used in the authorization request.</td></tr>
-                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's public client ID.</td></tr>
-                <tr><td><code>client_secret</code></td><td>Yes</td><td>Your application's client secret.</td></tr>
+                <tr><td><code>client_id</code></td><td>Yes</td><td>Your application's client ID.</td></tr>
+                <tr><td><code>client_secret</code></td><td><span class="badge bg-warning text-dark">Conditional</span></td><td>Required for <strong>confidential clients</strong> only. Omit for public clients.</td></tr>
                 <tr><td><code>code_verifier</code></td><td>Yes</td><td>The original PKCE code verifier.</td></tr>
             </tbody>
         </table>
     </section>
 
     <section id="example" class="my-5">
-        <h2>Full Example: Token Exchange in Python</h2>
-        <p class="text-muted">Here is a complete example of how your backend would handle the token exchange using the <code>requests</code> library.</p>
-        <pre><code>{% raw %}
-import requests
+        <h2>Token Exchange Examples</h2>
 
-# Assume you have these from your app's settings and the user's session
-CLIENT_ID = "your_client_id"
-CLIENT_SECRET = "your_client_secret"
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#example-public" type="button">Public Client (JavaScript)</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#example-confidential" type="button">Confidential Client (Python)</button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- Public Client Example -->
+            <div class="tab-pane fade show active" id="example-public">
+                <p class="text-muted">For single-page apps, mobile apps, or any client-side application:</p>
+                <pre><code>{% raw %}// Retrieve the code_verifier from storage
+const codeVerifier = sessionStorage.getItem('code_verifier');
+const authCode = new URLSearchParams(window.location.search).get('code');
+
+const tokenUrl = '{{ request.url_root }}oauth2/token';
+
+async function exchangeToken() {
+    const params = new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: authCode,
+        redirect_uri: 'https://your-app.com/callback',
+        client_id: 'YOUR_PUBLIC_CLIENT_ID',
+        code_verifier: codeVerifier,
+        // NO client_secret - this is a public client
+    });
+
+    const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        console.log('Access Token:', data.access_token);
+        // Store token securely and use it for API calls
+        localStorage.setItem('access_token', data.access_token);
+    } else {
+        console.error('Error:', data);
+    }
+}
+
+exchangeToken();{% endraw %}</code></pre>
+            </div>
+
+            <!-- Confidential Client Example -->
+            <div class="tab-pane fade" id="example-confidential">
+                <p class="text-muted">For backend web applications with secure server storage:</p>
+                <pre><code>{% raw %}import requests
+
+# Retrieve from your app's secure configuration and user session
+CLIENT_ID = "YOUR_CLIENT_ID"
+CLIENT_SECRET = "YOUR_CLIENT_SECRET"  # Stored securely on server
 REDIRECT_URI = "https://your-app.com/callback"
-AUTHORIZATION_CODE = "code_from_the_redirect_url"
-CODE_VERIFIER = "the_verifier_you_saved_in_the_session"
+AUTHORIZATION_CODE = request.args.get('code')
+CODE_VERIFIER = session.get('code_verifier')
 
 TOKEN_URL = "{{ request.url_root }}oauth2/token"
 
@@ -102,7 +245,7 @@ def exchange_code_for_token():
         'code': AUTHORIZATION_CODE,
         'redirect_uri': REDIRECT_URI,
         'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
+        'client_secret': CLIENT_SECRET,  # Include for confidential clients
         'code_verifier': CODE_VERIFIER,
     }
 
@@ -110,31 +253,68 @@ def exchange_code_for_token():
 
     if response.status_code == 200:
         token_data = response.json()
-        print("Access Token:", token_data.get("access_token"))
-        # Now you can save this token and use it to call the API
+        access_token = token_data.get("access_token")
+        refresh_token = token_data.get("refresh_token")
+
+        # Store tokens securely in session or database
+        session['access_token'] = access_token
+        session['refresh_token'] = refresh_token
+
+        return access_token
     else:
         print("Error:", response.json())
-        {% endraw %}</code></pre>
+        return None{% endraw %}</code></pre>
+            </div>
+        </div>
     </section>
 
     <section id="api" class="my-5">
         <h2>User Info Endpoint</h2>
         <p><code>GET /api/v1/user</code></p>
         <p class="text-muted">Fetches the authenticated user's profile data. Requires a Bearer token in the Authorization header.</p>
+
         <h6>Example Request</h6>
         <pre><code>curl -H "Authorization: Bearer &lt;ACCESS_TOKEN&gt;" {{ request.url_root }}api/v1/user</code></pre>
+
+        <h6>JavaScript Example</h6>
+        <pre><code>{% raw %}const accessToken = localStorage.getItem('access_token');
+
+fetch('{{ request.url_root }}api/v1/user', {
+    headers: {
+        'Authorization': `Bearer ${accessToken}`
+    }
+})
+.then(response => response.json())
+.then(data => console.log('User Data:', data))
+.catch(error => console.error('Error:', error));{% endraw %}</code></pre>
+
+        <h6>Response Example</h6>
+        <pre><code>{% raw %}{
+  "name": "John Doe",
+  "prn": "PES1UG21CS001",
+  "srn": "PES1202100001",
+  "program": "B.Tech",
+  "branch": "Computer Science and Engineering",
+  "semester": "5",
+  "section": "A",
+  "campus": "RR Campus",
+  "email": "john.doe@example.com",
+  "phone": "9876543210"
+}{% endraw %}</code></pre>
+
         <h6>Common Error Responses</h6>
         <table class="table table-bordered">
             <thead><tr><th>Status Code</th><th>Error</th><th>Meaning</th></tr></thead>
             <tbody>
-                <tr><td><code>401 Unauthorized</code></td><td><code>invalid_token</code></td><td>The access token is expired, revoked, or malformed. The user needs to log in again.</td></tr>
-                <tr><td><code>403 Forbidden</code></td><td><code>insufficient_scope</code></td><td>The access token is valid, but it does not have the required scope to access the requested data.</td></tr>
+                <tr><td><code>401 Unauthorized</code></td><td><code>invalid_token</code></td><td>The access token is expired, revoked, or malformed.</td></tr>
+                <tr><td><code>403 Forbidden</code></td><td><code>insufficient_scope</code></td><td>The token doesn't have the required scope to access the requested data.</td></tr>
             </tbody>
         </table>
     </section>
 
     <section id="scopes" class="my-5">
         <h2>Available Scopes</h2>
+        <p class="text-muted">Request only the scopes your application needs. Users will see exactly what data you're requesting.</p>
         <table class="table table-bordered">
             <thead><tr><th>Scope</th><th>Description</th></tr></thead>
             <tbody>
@@ -144,5 +324,63 @@ def exchange_code_for_token():
             </tbody>
         </table>
     </section>
+
+    <section id="best-practices" class="my-5">
+        <h2>Security Best Practices</h2>
+        <div class="alert alert-info">
+            <h5><i class="bi bi-shield-check"></i> Recommendations</h5>
+            <ul class="mb-0">
+                <li><strong>Always use HTTPS</strong> in production for all redirect URIs and API calls.</li>
+                <li><strong>Validate the state parameter</strong> to prevent CSRF attacks.</li>
+                <li><strong>Store tokens securely:</strong> Use httpOnly cookies or secure storage (never in localStorage for sensitive apps).</li>
+                <li><strong>Use short-lived tokens:</strong> Implement token refresh for long-running sessions.</li>
+                <li><strong>Never expose client secrets</strong> in client-side code or version control.</li>
+                <li><strong>Request minimal scopes:</strong> Only ask for the data your application actually needs.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="try-it" class="my-5 text-center">
+        <h2>Try It Out</h2>
+        <p class="text-muted">Use our interactive API tester to see the OAuth flow in action.</p>
+        <a href="{{ url_for('tester') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-play-circle"></i> Launch API Tester
+        </a>
+    </section>
 </div>
+
+<style>
+.nav-tabs .nav-link {
+    color: #aaa;
+    background-color: transparent;
+    border-color: var(--bs-border-color);
+}
+.nav-tabs .nav-link.active {
+    color: #fff;
+    background-color: #111;
+    border-color: var(--bs-border-color);
+}
+pre {
+    background-color: #0a0a0a;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+}
+code {
+    color: #17a2b8;
+}
+.table {
+    color: inherit;
+}
+.table-bordered {
+    border-color: var(--bs-border-color);
+}
+.table-bordered th,
+.table-bordered td {
+    border-color: var(--bs-border-color);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
