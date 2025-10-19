@@ -97,27 +97,27 @@
         <h2 class="mb-4">🔒 Security & Privacy</h2>
 
         <div class="accordion" id="accordionSecurity">
-            <div class="accordion-item bg-dark">
-                <h3 class="accordion-header">
-                    <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec1">
-                        Is my PESU password stored on your servers?
-                    </button>
-                </h3>
-                <div id="sec1" class="accordion-collapse collapse show" data-bs-parent="#accordionSecurity">
-                    <div class="accordion-body">
-                        <div class="alert alert-success mb-3">
-                            <strong>✅ Absolutely NOT!</strong>
-                        </div>
-                        <p>When you login:</p>
-                        <ol>
-                            <li>Your credentials go directly to PESU Academy's servers (not ours)</li>
-                            <li>PESU Academy validates your password</li>
-                            <li>If correct, PESU Academy sends back your profile data</li>
-                            <li>We store only your PRN and profile information (never your password)</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
+          <div class="accordion-item bg-dark">
+              <h3 class="accordion-header">
+                  <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#sec1">
+                      Is my PESU password stored on your servers?
+                  </button>
+              </h3>
+              <div id="sec1" class="accordion-collapse collapse show" data-bs-parent="#accordionSecurity">
+                  <div class="accordion-body">
+                      <div class="alert alert-info mb-3">
+                          <strong>🔒 Yes, but securely hashed</strong>
+                      </div>
+                      <p>Here's how we handle your password:</p>
+                      <ol>
+                          <li>You enter your credentials on our login page</li>
+                          <li>Your password is transmitted over encrypted HTTPS connection</li>
+                          <li>Login request is made to the PESU server and then the password is dismissed</li>
+                      </ol>
+                      <p class="mb-0"><strong>Important:</strong> We cannot see or retrieve your actual password.</p>
+                  </div>
+              </div>
+          </div>
 
             <div class="accordion-item bg-dark">
                 <h3 class="accordion-header">
