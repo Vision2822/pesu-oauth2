@@ -631,7 +631,7 @@ def authorize():
     return server.create_authorization_response(grant_user=grant_user)
 
 @app.route('/oauth2/token', methods=['POST'])
-@limiter.limit("30 per minute")
+@limiter.exempt
 @csrf.exempt
 def issue_token():
     try:
