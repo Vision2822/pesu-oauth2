@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { requireAdmin } from "@/lib/auth";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
+import { oauth2Tokens, oauth2AuthorizationCodes } from "@/lib/db/schema";
 
 interface CreateState {
   error: string | null;
@@ -109,6 +110,31 @@ export async function deleteClientAction(formData: FormData) {
 
   const id = parseInt(formData.get("id") as string, 10);
   if (isNaN(id)) return;
+
+  const client = await db
+    .select()
+    .from(oauth2Clients)
+    .where(and(eq(oauth2Clients.id, id), eq(oauth2Clients.userId, user.id)))
+    .limit(1);
+
+  if (client.length === 0) return;
+
+  const clientId = client[0].clientId;
+
+  await db
+    .update(oauth2Tokens)
+    .set({ revoked: true })
+    .where(eq(oauth2Tokens.clientId, clientId));
+
+  await db
+    .update(oauth2AuthorizationCodes)
+    .set({ used: true })
+    .where(
+      and(
+        eq(oauth2AuthorizationCodes.clientId, clientId),
+        eq(oauth2AuthorizationCodes.used, false)
+      )
+    );
 
   await db
     .delete(oauth2Clients)

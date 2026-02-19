@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleTokenRequest } from "@/lib/oauth2/grants";
 import { tokenLimit } from "@/lib/rate-limit";
+import { corsHeaders, handlePreflight } from "@/lib/cors";
+
+export async function OPTIONS(request: NextRequest) {
+  return handlePreflight(request);
+}
 
 export async function POST(request: NextRequest) {
+  const cors = corsHeaders(request);
+
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const { success } = await tokenLimit.limit(ip);
   if (!success) {
     return NextResponse.json(
       { error: "rate_limit", error_description: "Too many requests" },
-      { status: 429 }
+      { status: 429, headers: cors }
     );
   }
 
@@ -27,7 +34,7 @@ export async function POST(request: NextRequest) {
   } else {
     return NextResponse.json(
       { error: "invalid_request", error_description: "Unsupported content type" },
-      { status: 400 }
+      { status: 400, headers: cors }
     );
   }
 
@@ -41,5 +48,12 @@ export async function POST(request: NextRequest) {
     refresh_token: params.refresh_token,
   });
 
-  return NextResponse.json(result.data, { status: result.status });
+  return NextResponse.json(result.data, {
+    status: result.status,
+    headers: {
+      ...cors,
+      "Cache-Control": "no-store",
+      "Pragma": "no-cache",
+    },
+  });
 }

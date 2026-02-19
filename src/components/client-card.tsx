@@ -1,5 +1,6 @@
-import { deleteClientAction } from "@/app/admin/action";
+// components/client-card.tsx — UPDATED (remains a server component)
 import { oauth2Clients } from "@/lib/db/schema";
+import { DeleteClientButton } from "./delete-client-button";
 
 type Client = typeof oauth2Clients.$inferSelect;
 
@@ -76,7 +77,12 @@ export function ClientCard({ client }: { client: Client }) {
             </span>
             <br />
             <div
-              style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.15rem" }}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.25rem",
+                marginTop: "0.15rem",
+              }}
             >
               {uris.map((uri) => (
                 <code
@@ -106,7 +112,12 @@ export function ClientCard({ client }: { client: Client }) {
             </span>
             <br />
             <div
-              style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem", marginTop: "0.15rem" }}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.25rem",
+                marginTop: "0.15rem",
+              }}
             >
               {scopes.map((s) => (
                 <span
@@ -125,18 +136,11 @@ export function ClientCard({ client }: { client: Client }) {
           </div>
         </div>
 
-        <form action={deleteClientAction}>
-          <input type="hidden" name="id" value={client.id} />
-          <button
-            type="submit"
-            className="btn btn-sm btn-danger"
-            onClick={(e) => {
-              if (!confirm(`Delete "${client.clientName}"?`)) e.preventDefault();
-            }}
-          >
-            Delete
-          </button>
-        </form>
+        {}
+        <DeleteClientButton
+          clientId={client.id}
+          clientName={client.clientName}
+        />
       </div>
     </div>
   );

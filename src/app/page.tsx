@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
   return (
     <div className="container" style={{ paddingTop: "8rem" }}>
       <section style={{ maxWidth: "520px" }}>
@@ -14,14 +19,16 @@ export default function HomePage() {
           Authenticate students. Share profile data with consent. Built for
           developers building on top of PESU.
         </p>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href="/docs" className="btn btn-primary">
-            Docs
-          </Link>
-          <Link href="/login" className="btn btn-secondary">
-            Sign in
-          </Link>
-        </div>
+        {!user && (
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href="/docs" className="btn btn-primary">
+              Docs
+            </Link>
+            <Link href="/login" className="btn btn-secondary">
+              Sign in
+            </Link>
+          </div>
+        )}
       </section>
 
       <hr className="divider" style={{ margin: "4rem 0" }} />

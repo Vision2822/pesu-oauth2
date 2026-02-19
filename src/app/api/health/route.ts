@@ -9,12 +9,9 @@ export async function GET() {
       status: "healthy",
       timestamp: new Date().toISOString(),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json(
-      {
-        status: "unhealthy",
-        error: e instanceof Error ? e.message : "Unknown error",
-      },
+      { status: "unhealthy", timestamp: new Date().toISOString() },
       { status: 503 }
     );
   }

@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth";
-import { createAuthorizationCode } from "@/lib/oauth2/grants";
-import { SCOPE_FIELDS } from "@/lib/constants";
+import { createAuthorizationCode, getClient } from "@/lib/oauth2/grants";
+import { SCOPE_FIELDS, AVAILABLE_SCOPES } from "@/lib/constants";
 
 interface ConsentState {
   error: string | null;
@@ -27,6 +27,29 @@ export async function consentAction(
     return { error: "Missing required parameters." };
   }
 
+  const client = await getClient(clientId);
+  if (!client) {
+    return { error: "Invalid client." };
+  }
+
+  const registeredUris = client.redirectUris as string[];
+  if (!registeredUris.includes(redirectUri)) {
+
+    return { error: "Redirect URI not registered for this client." };
+  }
+
+  if (codeChallengeMethod !== "S256") {
+    return { error: "Invalid code challenge method." };
+  }
+
+  const clientScopes = new Set(client.scope.split(" "));
+  const requestedScopes = scope.split(" ");
+  for (const s of requestedScopes) {
+    if (!clientScopes.has(s) || !(s in AVAILABLE_SCOPES)) {
+      return { error: `Scope "${s}" not allowed for this client.` };
+    }
+  }
+
   if (action === "deny") {
     const url = new URL(redirectUri);
     url.searchParams.set("error", "access_denied");
@@ -36,7 +59,6 @@ export async function consentAction(
   }
 
   const rawFields = formData.getAll("granted_fields") as string[];
-  const requestedScopes = scope.split(" ");
   const grantedFields: Record<string, string[]> = {};
 
   for (const entry of rawFields) {

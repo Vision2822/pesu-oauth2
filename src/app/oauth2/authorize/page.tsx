@@ -76,12 +76,17 @@ export default async function AuthorizePage({
     );
   }
 
-  const requestedScopes = params.scope.split(" ").filter((s) => s in AVAILABLE_SCOPES);
+  const clientScopes = new Set(client.scope.split(" "));
+  const requestedScopes = params.scope
+    .split(" ")
+    .filter((s) => s in AVAILABLE_SCOPES && clientScopes.has(s));
 
   if (requestedScopes.length === 0) {
     return (
       <div className="container" style={{ paddingTop: "6rem", maxWidth: "500px" }}>
-        <div className="alert alert-danger">No valid scopes requested.</div>
+        <div className="alert alert-danger">
+          No valid scopes requested, or scopes exceed client registration.
+        </div>
       </div>
     );
   }

@@ -70,9 +70,11 @@ export async function Navbar() {
               >
                 {user.pesuprn.toUpperCase()}
               </span>
-              <Link href="/logout" className="btn btn-sm btn-secondary">
+            <form action="/logout" method="POST" style={{ display: "inline" }}>
+            <button type="submit" className="btn btn-sm btn-secondary">
                 Logout
-              </Link>
+            </button>
+            </form>
             </div>
           ) : (
             <Link href="/login" className="btn btn-sm btn-primary">

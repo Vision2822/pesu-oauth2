@@ -59,24 +59,47 @@ export async function validateAccessToken(token: string) {
 }
 
 export async function validateRefreshToken(token: string) {
-  const result = await db
-    .select()
-    .from(oauth2Tokens)
+
+  const claimed = await db
+    .update(oauth2Tokens)
+    .set({ revoked: true })
     .where(
       and(
         eq(oauth2Tokens.refreshToken, token),
         eq(oauth2Tokens.revoked, false)
       )
     )
-    .limit(1);
+    .returning();
 
-  if (result.length === 0) return null;
+  if (claimed.length === 0) {
 
-  const row = result[0];
+    const existing = await db
+      .select()
+      .from(oauth2Tokens)
+      .where(eq(oauth2Tokens.refreshToken, token))
+      .limit(1);
+
+    if (existing.length > 0 && existing[0].revoked) {
+
+      await db
+        .update(oauth2Tokens)
+        .set({ revoked: true })
+        .where(
+          and(
+            eq(oauth2Tokens.clientId, existing[0].clientId),
+            eq(oauth2Tokens.userId, existing[0].userId)
+          )
+        );
+    }
+
+    return null;
+  }
+
+  const row = claimed[0];
   const now = Math.floor(Date.now() / 1000);
-  const refreshTTL = row.expiresIn * 2;
+  const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60; 
 
-  if (row.issuedAt + refreshTTL < now) return null;
+  if (row.issuedAt + REFRESH_TOKEN_TTL < now) return null;
 
   return row;
 }

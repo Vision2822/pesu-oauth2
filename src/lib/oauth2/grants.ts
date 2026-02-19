@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import {
   oauth2Clients,
   oauth2AuthorizationCodes,
+  oauth2Tokens,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -148,29 +149,56 @@ async function handleAuthCodeGrant(
     };
   }
 
-  const authCodes = await db
-    .select()
-    .from(oauth2AuthorizationCodes)
+  const claimedCodes = await db
+    .update(oauth2AuthorizationCodes)
+    .set({ used: true })
     .where(
       and(
         eq(oauth2AuthorizationCodes.code, params.code),
-        eq(oauth2AuthorizationCodes.clientId, client.clientId)
+        eq(oauth2AuthorizationCodes.clientId, client.clientId),
+        eq(oauth2AuthorizationCodes.used, false)
       )
     )
-    .limit(1);
+    .returning();
 
-  const authCode = authCodes[0];
+  const authCode = claimedCodes[0];
 
   if (!authCode) {
+
+    const existing = await db
+      .select()
+      .from(oauth2AuthorizationCodes)
+      .where(
+        and(
+          eq(oauth2AuthorizationCodes.code, params.code),
+          eq(oauth2AuthorizationCodes.clientId, client.clientId)
+        )
+      )
+      .limit(1);
+
+    if (existing.length > 0 && existing[0].used) {
+
+      await db
+        .update(oauth2Tokens)
+        .set({ revoked: true })
+        .where(
+          and(
+            eq(oauth2Tokens.clientId, client.clientId),
+            eq(oauth2Tokens.userId, existing[0].userId)
+          )
+        );
+
+      return {
+        data: {
+          error: "invalid_grant",
+          error_description: "Code already used. All tokens revoked for security.",
+        },
+        status: 400,
+      };
+    }
+
     return {
       data: { error: "invalid_grant", error_description: "Invalid authorization code" },
-      status: 400,
-    };
-  }
-
-  if (authCode.used) {
-    return {
-      data: { error: "invalid_grant", error_description: "Code already used" },
       status: 400,
     };
   }
@@ -210,11 +238,6 @@ async function handleAuthCodeGrant(
     };
   }
 
-  await db
-    .update(oauth2AuthorizationCodes)
-    .set({ used: true })
-    .where(eq(oauth2AuthorizationCodes.id, authCode.id));
-
   const tokenData = await issueTokenPair({
     userId: authCode.userId,
     clientId: client.clientId,
@@ -251,8 +274,6 @@ async function handleRefreshGrant(
       status: 400,
     };
   }
-
-  await revokeToken(oldToken.id);
 
   const tokenData = await issueTokenPair({
     userId: oldToken.userId,
