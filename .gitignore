@@ -1,13 +1,9 @@
-# Python
-__pycache__/
-*.pyc
-venv/
-instance/
-
-# Environment
+node_modules/
+.next/
 .env
 .env.local
-
-# IDE
-.vscode/
-.idea/
+.env.production
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+drizzle/
