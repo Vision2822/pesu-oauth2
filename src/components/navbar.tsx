@@ -46,12 +46,6 @@ export async function Navbar() {
             Tester
           </Link>
           <Link
-            href="/faq"
-            style={{ fontSize: "0.8rem", color: "var(--g12)" }}
-          >
-            FAQ
-          </Link>
-          <Link
             href="/about"
             style={{ fontSize: "0.8rem", color: "var(--g12)" }}
           >
@@ -74,7 +68,7 @@ export async function Navbar() {
                   border: "1px solid var(--border)",
                 }}
               >
-                {user.pesuprn}
+                {user.pesuprn.toUpperCase()}
               </span>
               <Link href="/logout" className="btn btn-sm btn-secondary">
                 Logout

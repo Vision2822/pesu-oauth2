@@ -39,16 +39,21 @@ export async function loginAction(
     return { error: result.error ?? "Login failed." };
   }
 
+  const prn = (result.profile.prn ?? username).toLowerCase();
+
   const existing = await db
     .select()
     .from(users)
-    .where(eq(users.pesuprn, username))
+    .where(eq(users.pesuprn, prn))
     .limit(1);
 
   let userId: number;
 
   if (existing.length > 0) {
-    const merged = { ...(existing[0].profileData as Record<string, unknown> ?? {}), ...result.profile };
+    const merged = {
+      ...((existing[0].profileData as Record<string, unknown>) ?? {}),
+      ...result.profile,
+    };
     await db
       .update(users)
       .set({ profileData: merged })
@@ -57,7 +62,7 @@ export async function loginAction(
   } else {
     const inserted = await db
       .insert(users)
-      .values({ pesuprn: username, profileData: result.profile })
+      .values({ pesuprn: prn, profileData: result.profile })
       .returning({ id: users.id });
     userId = inserted[0].id;
   }

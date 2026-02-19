@@ -19,17 +19,13 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function requireAuth(): Promise<User> {
   const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("UNAUTHORIZED");
-  }
+  if (!user) throw new Error("UNAUTHORIZED");
   return user;
 }
 
 export async function requireAdmin(): Promise<User> {
   const user = await requireAuth();
-  if (!ADMIN_PRNS.has(user.pesuprn)) {
-    throw new Error("FORBIDDEN");
-  }
+  if (!ADMIN_PRNS.has(user.pesuprn)) throw new Error("FORBIDDEN");
   return user;
 }
 

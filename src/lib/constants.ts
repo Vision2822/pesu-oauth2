@@ -32,6 +32,6 @@ export const SCOPE_FIELDS: Record<string, Record<string, string>> = {
 export const ADMIN_PRNS: Set<string> = new Set(
   (process.env.ADMIN_USERS ?? "")
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => s.trim().toLowerCase())
     .filter(Boolean)
 );
