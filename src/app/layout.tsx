@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PESU OAuth2",
-  description:
-    "A secure OAuth2 authentication service for the PESU community.",
+  title: "PESU Auth",
+  description: "OAuth2 for PESU",
 };
 
 export default function RootLayout({
@@ -22,15 +23,17 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Source+Serif+4:ital,wght@1,500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
-        />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Navbar />
+        <main style={{ paddingTop: "3.5rem", minHeight: "80vh" }}>
+          {children}
+        </main>
+        <Footer />
+      </body>
     </html>
   );
 }
