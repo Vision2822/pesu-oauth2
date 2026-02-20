@@ -1426,3 +1426,194 @@ input[type="checkbox"].cb:indeterminate::after {
   background: var(--g20);
   border: none;
 }
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--g1);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0;
+}
+
+.navbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  z-index: 102;
+}
+
+.navbar-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid var(--g6);
+  padding: 0.45rem 0.4rem;
+  cursor: pointer;
+  z-index: 102;
+  transition: border-color 0.15s;
+}
+
+.navbar-burger:hover {
+  border-color: var(--g10);
+}
+
+.navbar-burger span {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: var(--g16);
+  transition: transform 0.25s, opacity 0.25s;
+}
+
+.navbar-burger-open span:nth-child(1) {
+  transform: translateY(5.5px) rotate(45deg);
+}
+
+.navbar-burger-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-burger-open span:nth-child(3) {
+  transform: translateY(-5.5px) rotate(-45deg);
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar-link {
+  font-size: 0.8rem;
+  color: var(--g12);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.navbar-link:hover {
+  color: var(--g23);
+}
+
+.navbar-sep {
+  display: none;
+}
+
+.navbar-user {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.navbar-badge {
+  font-size: 0.75rem;
+  color: var(--g10);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.navbar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-burger {
+    display: flex;
+  }
+
+  .navbar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .navbar-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 260px;
+    max-width: 80vw;
+    background: var(--g2);
+    border-left: 1px solid var(--border);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 4.5rem 1.25rem 1.5rem;
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+
+  .navbar-menu-open {
+    transform: translateX(0);
+  }
+
+  .navbar-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .navbar-link {
+    font-size: 0.9rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--g4);
+  }
+
+  .navbar-sep {
+    display: block;
+    height: 1px;
+    background: var(--border);
+    margin: 0.75rem 0;
+  }
+
+  .navbar-user {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .navbar-user .navbar-link {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--g4);
+  }
+
+  .navbar-badge {
+    text-align: center;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .navbar-user .btn,
+  .navbar-menu > .btn {
+    text-align: center;
+    justify-content: center;
+    padding: 0.55rem 1rem;
+    width: 100%;
+    font-size: 0.85rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
