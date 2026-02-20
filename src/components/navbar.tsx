@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function Navbar() {
@@ -25,39 +26,35 @@ export async function Navbar() {
           alignItems: "center",
         }}
       >
-        <Link
-          href="/"
-          style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--g20)" }}
-        >
-          PESU Auth
+        <Link href="/" style={{ display: "flex", alignItems: "center" }}>
+          <Image
+            src="/logo.png"
+            alt="PESU Auth"
+            width={200}
+            height={200}
+            style={{
+              height: "2rem",
+              width: "2rem",
+              objectFit: "contain",
+            }}
+            priority
+          />
         </Link>
 
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-          <Link
-            href="/docs"
-            style={{ fontSize: "0.8rem", color: "var(--g12)" }}
-          >
+          <Link href="/docs" style={{ fontSize: "0.8rem", color: "var(--g12)" }}>
             Docs
           </Link>
-          <Link
-            href="/tester"
-            style={{ fontSize: "0.8rem", color: "var(--g12)" }}
-          >
+          <Link href="/tester" style={{ fontSize: "0.8rem", color: "var(--g12)" }}>
             Tester
           </Link>
-          <Link
-            href="/about"
-            style={{ fontSize: "0.8rem", color: "var(--g12)" }}
-          >
+          <Link href="/about" style={{ fontSize: "0.8rem", color: "var(--g12)" }}>
             About
           </Link>
 
           {user ? (
             <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-              <Link
-                href="/admin"
-                style={{ fontSize: "0.8rem", color: "var(--g12)" }}
-              >
+              <Link href="/admin" style={{ fontSize: "0.8rem", color: "var(--g12)" }}>
                 Admin
               </Link>
               <span
@@ -70,11 +67,11 @@ export async function Navbar() {
               >
                 {user.pesuprn.toUpperCase()}
               </span>
-            <form action="/logout" method="POST" style={{ display: "inline" }}>
-            <button type="submit" className="btn btn-sm btn-secondary">
-                Logout
-            </button>
-            </form>
+              <form action="/logout" method="POST" style={{ display: "inline" }}>
+                <button type="submit" className="btn btn-sm btn-secondary">
+                  Logout
+                </button>
+              </form>
             </div>
           ) : (
             <Link href="/login" className="btn btn-sm btn-primary">

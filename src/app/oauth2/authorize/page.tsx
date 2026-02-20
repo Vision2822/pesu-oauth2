@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { getCurrentUser } from "@/lib/auth";
 import { getClient } from "@/lib/oauth2/grants";
 import { AVAILABLE_SCOPES, SCOPE_FIELDS } from "@/lib/constants";
@@ -94,46 +95,162 @@ export default async function AuthorizePage({
   const profile = (user.profileData ?? {}) as Record<string, unknown>;
 
   return (
-    <div className="container" style={{ paddingTop: "6rem", maxWidth: "500px" }}>
-      <h1 style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>
-        Authorize
-      </h1>
-      <p className="text-muted" style={{ fontSize: "0.8rem", marginBottom: "1.5rem" }}>
-        <strong>{client.clientName}</strong> wants access to your account.
-      </p>
-
+    <div
+      className="container"
+      style={{
+        paddingTop: "6rem",
+        maxWidth: "520px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
       <div
         style={{
-          padding: "0.6rem 0.8rem",
-          background: "var(--g2)",
+          width: "100%",
           border: "1px solid var(--border)",
-          marginBottom: "1rem",
-          fontSize: "0.8rem",
+          background: "var(--g2)",
+          padding: "2rem",
         }}
       >
-        <span className="text-muted">Signed in as </span>
-        <strong>{user.pesuprn}</strong>
-        <span style={{ marginLeft: "0.5rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <div
+            style={{
+              width: "4rem",
+              height: "4rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid var(--border)",
+              background: "var(--g1)",
+              borderRadius: "0.5rem",
+            }}
+          >
+            <Image
+              src="/logo.png"
+              alt="PESU Auth"
+              width={200}
+              height={200}
+              style={{
+                height: "3rem",
+                width: "3rem",
+                objectFit: "contain",
+              }}
+              priority
+            />
+          </div>
+        </div>
+
+        <h1
+          style={{
+            fontSize: "1.3rem",
+            fontWeight: 700,
+            textAlign: "center",
+            marginBottom: "0.25rem",
+            color: "var(--g20)",
+          }}
+        >
+          {client.clientName}
+        </h1>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "1rem",
+          }}
+        >
           {client.clientSecret === null ? (
-            <span className="badge badge-info">Public</span>
+            <span className="badge badge-info">Public Client</span>
           ) : (
-            <span className="badge badge-success">Confidential</span>
+            <span className="badge badge-success">Confidential Client</span>
           )}
-        </span>
+        </div>
+
+        <p
+          style={{
+            fontSize: "0.9rem",
+            textAlign: "center",
+            color: "var(--g12)",
+            lineHeight: 1.6,
+            marginBottom: "1.5rem",
+          }}
+        >
+          This application wants to access your PESU account information.
+          By clicking <strong>Authorize</strong>, you agree to share the
+          requested data with <strong>{client.clientName}</strong>. You can
+          revoke this access at any time.
+        </p>
+
+        <div
+          style={{
+            borderTop: "1px solid var(--border)",
+            marginBottom: "1.5rem",
+          }}
+        />
+
+        <div
+          style={{
+            padding: "0.6rem 0.8rem",
+            background: "var(--g1)",
+            border: "1px solid var(--border)",
+            marginBottom: "1.5rem",
+            fontSize: "0.8rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <span className="text-muted">Signed in as </span>
+            <strong>{user.pesuprn}</strong>
+          </div>
+        </div>
+
+        <p
+          style={{
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            color: "var(--g16)",
+            marginBottom: "0.75rem",
+          }}
+        >
+          This application will be able to:
+        </p>
+
+        <ConsentForm
+          clientId={params.client_id}
+          redirectUri={params.redirect_uri}
+          scope={params.scope}
+          state={params.state ?? ""}
+          codeChallenge={params.code_challenge}
+          codeChallengeMethod={params.code_challenge_method}
+          requestedScopes={requestedScopes}
+          scopeDescriptions={AVAILABLE_SCOPES}
+          scopeFields={SCOPE_FIELDS}
+          profile={profile}
+        />
       </div>
 
-      <ConsentForm
-        clientId={params.client_id}
-        redirectUri={params.redirect_uri}
-        scope={params.scope}
-        state={params.state ?? ""}
-        codeChallenge={params.code_challenge}
-        codeChallengeMethod={params.code_challenge_method}
-        requestedScopes={requestedScopes}
-        scopeDescriptions={AVAILABLE_SCOPES}
-        scopeFields={SCOPE_FIELDS}
-        profile={profile}
-      />
+      <p
+        style={{
+          fontSize: "0.7rem",
+          color: "var(--g8)",
+          textAlign: "center",
+          marginTop: "1rem",
+          lineHeight: 1.5,
+        }}
+      >
+        You are authorizing access through PESU Auth. Only the data associated
+        with the requested scopes will be shared. Review the scopes above before
+        proceeding.
+      </p>
     </div>
   );
 }
