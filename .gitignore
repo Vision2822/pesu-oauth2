@@ -11,3 +11,8 @@ instance/
 # IDE
 .vscode/
 .idea/
+
+#Residue
+.next/
+next-env.d.ts
+node_modules/
